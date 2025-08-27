@@ -1,0 +1,32 @@
+\babel@toc {slovak}{}\relax 
+\contentsline {section}{\numberline {1}Úvod}{6}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Motivácia a ciele práce}{6}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}Vymedzenie problému}{6}{subsection.1.2}%
+\contentsline {subsection}{\numberline {1.3}Prehľad existujúcich riešení}{6}{subsection.1.3}%
+\contentsline {subsection}{\numberline {1.4}Prínos a očakávania}{6}{subsection.1.4}%
+\contentsline {section}{\numberline {2}Teoretické základy}{6}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Virtualizácia a kontajnerizácia}{6}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Docker a jeho architektúra}{6}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Programovací jazyk Go a jeho ekosystém}{6}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}Softvérové architektúry a rozšíriteľnosť knižníc}{7}{subsection.2.4}%
+\contentsline {section}{\numberline {3}Analýza problému}{7}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Požiadavky na systém}{7}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}Prehľad dostupných knižníc a nástrojov}{7}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Návrh architektúry riešenia}{7}{subsection.3.3}%
+\contentsline {section}{\numberline {4}Návrh a implementácia riešenia}{7}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Návrh knižnice}{7}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}Implementácia Docker klienta}{7}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}Testovanie a validácia}{8}{subsection.4.3}%
+\contentsline {subsection}{\numberline {4.4}Implementácia ukážkovej aplikácie}{8}{subsection.4.4}%
+\contentsline {section}{\numberline {5}Možné budúce rozšírenia}{8}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Podpora iných runtimes (Podman, containerd!}{8}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}Správa zväzkov a sieťovanie}{8}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}Open-source pokračovanie}{8}{subsection.5.3}%
+\contentsline {section}{Z\'aver}{9}{section*.2}%
+\babel@toc {slovak}{}\relax 
+\babel@toc {slovak}{}\relax 
+\contentsline {section}{Conclusions}{10}{section*.4}%
+\babel@toc {english}{}\relax 
+\babel@toc {slovak}{}\relax 
+\contentsline {section}{\numberline {6}Obsah elektronických dát}{10}{section.6}%
+\contentsline {section}{Zoznam skratiek}{12}{section*.6}%

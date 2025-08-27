@@ -1,0 +1,327 @@
+%%%  Ukázkový text a dokumentace stylu pro text závěrečné (bakalářské a
+%%%  diplomové) práce na KI PřF UP v Olomouci
+%%%  Copyright (C) 2012 Martin Rotter, <rotter.martinos@gmail.com>
+%%%  Copyright (C) 2014 Jan Outrata, <jan.outrata@upol.cz>
+
+
+%%  Pro získání PDF souboru dokumentu je třeba tento zdrojový text v
+%%  LaTeXu přeložit (dvakrát) programem pdfLaTeX.
+
+%%  V případě použití programu BibLaTeX pro tvorbu seznamu literatury
+%%  je poté ještě třeba spustit program Biber s parametrem jméno
+%%  souboru zdrojového textu bez přípony a následně opět (dvakrát)
+%%  přeložit zdrojový text programem pdfLaTeX.
+
+%%  Postup získání Postscriptového souboru je popsán v dokumentaci.
+
+
+%%  Třída dokumentu implementující styl pro závěrečnou práci. Vybrané
+%%  nepovinné parametry (ostatní v dokumentaci):
+
+%%  'master' pro sazbu diplomové práce, jinak se sází bakalářská práce
+
+%%  'program=kód' pro Váš studijní program/obor (specializaci), kódy
+%%  pro diplomovou práci 'infoi' pro Informatiku (Obecná informatika),
+%%  'infui' pro Informatiku (Umělá inteligence), 'ainfpst' pro
+%%  Aplikovanou informatiku (Počítačové systémy a technologie), 'uinf'
+%%  pro Učitelství informatiky pro střední školy, 'binf' pro
+%%  Bioinformatiku, 'inf' pro Informatiku (bez specializací) a 'ainf'
+%%  pro Aplikovanou informatiku (bez specializací), jinak je výchozí
+%%  ainfvs pro Aplikovanou informatiku (Vývoj software), a pro
+%%  bakalářskou práci 'infoi' pro Informatiku (Obecná informatika),
+%%  'itp' pro Informační technologie v prezenční formě, 'itk' pro
+%%  Informační technologie v kombinované formě, 'infv' pro Informatiku
+%%  pro vzdělávání, 'binf' pro Bioinfomatiku, 'inf' pro Informatiku
+%%  (bez specializací), 'ainfp' pro Aplikovanou informatiku (bez
+%%  specializací) v prezenční formě, 'ainfk' pro Aplikovanou
+%%  informatiku (bez specializací) v kombinované formě, jinak je
+%%  výchozí infpvs pro Informatiku (Programování a vývoj software)
+
+%%  'printversion' pro sazbu verze pro tisk (nebarevné logo a odkazy,
+%%  odkazy s uvedením adresy za odkazem, ne odkazy do rejstříku),
+%%  jinak verze pro prohlížeč
+
+%%  'biblatex' pro zapnutí podpory pro sazbu bibliografie pomocí
+%%  BibLaTeXu, jinak je výchozí sazba v prostředí thebibliography
+
+%%  'language=jazyk' pro jazyk práce, jazyky english pro anglický,
+%%  slovak pro slovenský, jinak je výchozí czech pro český
+
+%%  'font=sans' pro bezpatkový font (Iwona Light), jinak je výchozí
+%%  serif pro patkový (Latin Modern)
+
+%%  'figures, tables, theorems a sourcecodes' pro sazbu seznamu
+%%  obrázků, tabulek, vět a zdrojových kódů, jinak při =false se
+%%  nesází (u theorems a sourcecodes výchozí)
+
+\documentclass[
+%  master,
+ program=infpvs,
+%  printversion,
+  biblatex,
+  language=slovak,
+%  font=sans,
+  figures=false,
+  tables=false,
+%  theorems,
+%  sourcecodes,
+  glossaries,
+  index
+]{kidiplom}
+
+%% Informace pro úvodní strany. V jazyku práce (pokud není v komentáři
+%% uvedeno česky) a anglicky. Uveďte všechny, u kterých není v
+%% komentáři uvedeno, že jsou volitelné. Při neuvedení se použijí
+%% výchozí texty. Text pro jiný než nastavený jazyk práce (nepovinným
+%% parametrem language makra \documentclass, výchozí český) se zadává
+%% použitím makra s uvedením jazyka jako nepovinného parametru.
+
+%% Název práce, česky a anglicky. Měl by se vysázet na jeden řádek.
+\title{Rozšíriteľná knižnica pre správu Docker kontajnerov implementovaná v Go}
+\title[english]{An extensible library for Docker Container management implemented in Go}
+
+%% Volitelný podnázev práce, česky a anglicky. Měl by se vysázet na
+%% jeden řádek. Výchozí je prázdný.
+%% \subtitle{Ukázkový text a dokumentace stylu v \LaTeX{}u}
+%% \subtitle[english]{Sample text and documentation of the \LaTeX{} style}
+
+%% Jméno autora práce. Makro nemá nepovinný parametr pro uvedení
+%% jazyka.
+\author{Samuel Táborský}
+
+%% Jméno vedoucího práce (včetně titulů). Makro nemá nepovinný
+%% parametr pro uvedení jazyka.
+\supervisor{Mgr. Tomáš Urbanec, Ph.D.}
+
+%% Volitelný rok odevzdání práce. Výchozí je aktuální (kalendářní)
+%% rok. Makro nemá nepovinný parametr pro uvedení jazyka.
+%\yearofsubmit{\the\year}
+
+%% Anotace práce, včetně anglické (obvykle překlad z jazyka
+%% práce). Jeden odstavec!
+\annotation{Táto bakalárska práca sa zaoberá návrhom a implementáciou knižnice v jazyku Go na správu Docker kontajnerov. Opisuje teoretické východiská kontajnerizácie a prístup cez Docker API, pričom sa sústreďuje na modulárnu architektúru umožňujúcu rozšíriteľnosť aj podporu rôznych kontajnerových runtime. Praktická časť práce zahŕňa implementáciu knižnice a sprievodnej ukážkovej aplikácie pre správu kontajnerov, sledovanie udalostí a monitoring prostriedkov. Výsledné riešenie je overené testami a predstavuje základ pre ďalší vývoj a rozšírenie v open-source prostredí.}
+
+\annotation[english]{This bachelor's thesis focuses on the design and implementation of a Go-based library for Docker container management. It outlines the fundamentals of containerization and Docker API access, with emphasis on a modular architecture enabling extensibility and support for multiple container runtimes. The practical part includes the implementation of the library and an accompanying demo application for container management, event monitoring, and resource tracking. The solution is validated by testing and provides a foundation for further development and open-source extension.}
+
+%% Klíčová slova práce, včetně anglických. Oddělená (obvykle) středníkem.
+\keywords{Docker; kontajnerizácia, knižnica; jazyk Go}
+\keywords[english]{Docker; containerization; library; Go language}
+
+%% Volitelná specifikace příloh textu práce, i anglicky. Výchozí je
+%% 'elektronická data v systému katedry informatiky / electronic data
+%% in system of department of computer science'.
+%\supplements{nejlepší software všech dob}
+%\supplements[english]{the best software of all times}
+
+%% Volitelné poděkování. Stručné! Výchozí je prázdné. Makro nemá
+%% nepovinný parametr pro uvedení jazyka.
+\thanks{Poďakovania}
+
+%% Cesta k souboru s bibliografií pro její sazbu pomocí BibLaTeXu
+%% (zvolenou nepovinným parametrem biblatex makra
+%% \documentclass). Použijte pouze při této sazbě, ne při (výchozí)
+%% sazbě v prostředí thebibliography.
+\bibliography{bibliografie.bib}
+
+%% Další dodatečné styly (balíky) potřebné pro sazbu vlastního textu
+%% práce.
+\usepackage{lipsum}
+\usepackage{longtable}
+
+\begin{document}
+%% Sazba úvodních stran -- titulní, s bibliografickými údaji, s
+%% anotací a klíčovými slovy, s poděkováním a prohlášením, s obsahem a
+%% se seznamy obrázků, tabulek, vět a zdrojových kódů (pokud jejich
+%% sazba není vypnutá).
+\maketitle
+
+%% Vlastní text závěrečné práce. Pro povinné závěry, před přílohami,
+%% použijte prostředí kiconclusions. Povinná je i příloha s obsahem
+%% elektronických dat.
+
+%% -------------------------------------------------------------------
+
+\newcommand{\BibLaTeX}{\textsc{Bib}\LaTeX}
+
+% \noindent\textcolor{red}{\LARGE Upozornění: Následující text
+%   dokumentace stylu, vyjma přílohy~\ref{sec:ObsahData}, je rozpracovaná
+%   a (značně) neúplná verze!!!}
+
+\section{Úvod}
+\subsection{Motivácia a ciele práce}
+V krátkosti predstavím moju prácu spolu s motiváciou, vymedzím si ciele, ktoré chcem aby práca spĺňala.
+
+\subsection{Vymedzenie problému}
+Komplexnejšie predstavím projekt a vysvetlím obmedzenia a rozsah môjho riešenia, ako aj dôvody na tieto rozhodnutia.
+
+\subsection{Prehľad existujúcich riešení}
+Popíšem, aké iné nástroje a aplikácie existujú, aké sú ich obmedzenia a výhody.
+
+\subsection{Prínos a očakávania}
+Prednesiem moje očakávania od hotového projektu a jeho prínosy, ako napríklad možnosť pokračovať vo vývoji ako súčasť open-source komunity.
+
+
+%%%  Po přeložení programem CSLaTeX (třikrát) je potřeba použít
+%%%  program DVIPS a takto získaný PostScriptový soubor vytisknout
+%%%  na PostScriptové tiskárně nebo pomocí programu GhostScript.
+%%%
+%%%  Rovněž je možné použít program DVIPDFM a vytvořit z dokumentu
+%%%  soubor ve formátu PDF včetně hypertextových odkazů.
+
+\section{Teoretické základy}
+\subsection{Virtualizácia a kontajnerizácia}
+V tejto kapitole popíšem históriu kontajnerizácie a jej vzniku. Zameriam sa takisto na porovnanie s bežnou virtualizáciou, prednesiem výhody a nevýhody oboch prístupov, ako aj moderné použitie kontajnerov v cloudových službách.
+
+\subsection{Docker a jeho architektúra}
+V tejto kapitole predstavím Docker a Docker Engine, jeho architektúru, históriu a komponenty. Popíšem ako vyzerá REST API, s ktorým bude moja knižnica komunikovať, a prednesiem technické možnosti, ktoré Docker poskytuje na správu kontajnerov.
+
+\subsection{Programovací jazyk Go a jeho ekosystém}
+Predstavím jazyk Go ako moderné pokračovanie nízkoúrovňových jazykov typu C, jeho vlastnosti a špecifické možnosti. Popíšem štruktúru programov napísaných v jazyku Go, používanie modulov a správne praktiky pre písanie efektívneho, znovupoužiteľného a rozšíriteľného kódu.
+
+\subsection{Softvérové architektúry a rozšíriteľnosť knižníc}
+V tejto kapitole popíšem rôzne architektúry softvéru, ich výhody a nevýhody. Rovnako sa zameriam aj na praktiky, ktoré umožňujú zjednodušiť vývoj a následné udržovanie a rozširovanie softvérových aplikácií. Skrátka predstavím aj spôsob, ktorým docielim rozšíriteľnosť mojej knižnice o podporu ďalších backendov, ako je napríklad Podman.
+
+
+\section{Analýza problému}
+\subsection{Požiadavky na systém}
+V tejto podkapitole vymedzím požiadavky na funkčnosť aplikácie (ako napríklad možnosti správy kontajnerov, monitorovanie ich stavu atď.), ako aj požiadavky na štruktúru aplikácie, jej rozšíriteľnosť a čistotu kódu.
+
+\subsection{Prehľad dostupných knižníc a nástrojov}
+Predstavím všetky nástroje a knižnice, ktoré bude moja aplikácia využívať, na čo ich bude využívať a prečo niektoré časti nebudem písať ja. Ukážem rozdiely medzi REST API a SDK, a takisto v krátkosti predstavím nástroje a knižnice, ktoré by mohli byť použité pre rozšírenie na iné kontajnerové runtimes.
+
+\subsection{Návrh architektúry riešenia}
+Popíšem architektúru celej aplikácie, jej rozdelenie na oddelené vrstvy a dôvody na tieto rozhodnutia. Predstavím základné rozhranie aplikácie, ktoré bude spoločné pre všetky runtimes. Rovnako popíšem dizajn, ktorý mi umožňuje v budúcnosti aplikáciu rozšíriť.
+
+
+\section{Návrh a implementácia riešenia}
+\subsection{Návrh knižnice}
+Popíšem štruktúru knižnice a repozitára, rozdelenie na samostatné časti, ďalej predstavím typy a verejné rozhranie (API). Vysvetlím moje použitie submodulov namiesto reexportu v hlavnom module, ako aj možnosť prejsť v budúcnosti na tento spôsob.
+
+\subsection{Implementácia Docker klienta}
+Opíšem implementáciu klienta, ktorý komunikuje s Docker Engine cez REST API a SDK. Ukážem funkcionalitu, ktorú klient umožňuje (správa životného cyklu, monitorovanie, sledovanie udalostí - eventov, správa kontajnerov).
+
+\subsection{Testovanie a validácia}
+Ukážem, akým spôsobom je aplikácia testovaná a ktoré jej časti sú pokryté. Použijem unit testy a integračné testy.
+
+\subsection{Implementácia ukážkovej aplikácie}
+Predstavím jednoduchú ukážkovú aplikáciu, ktorá demonštruje spôsob a možnosti použitia tejto knižnice.
+
+
+\section{Možné budúce rozšírenia}
+\subsection{Podpora iných runtimes (Podman, containerd!}
+
+\subsection{Správa zväzkov a sieťovanie}
+
+\subsection{Open-source pokračovanie}
+
+%% Závěry práce. V jazyce práce a anglicky. Text pro jiný než
+%% nastavený jazyk práce (nepovinným parametrem language makra
+%% \documentclass, výchozí český) se zadává použitím makra s uvedením
+%% jazyka jako nepovinného parametru.
+\begin{kiconclusions}
+Závěr práce v \uv{českém} jazyce.
+\end{kiconclusions}
+
+\begin{kiconclusions}[english]
+Thesis conclusions in \uv{English}.
+\end{kiconclusions}
+
+%% Obsah elektronických dat. Poslední příloha. Upravte podle vlastní
+%% práce!
+\section{Obsah elektronických dát} \label{sec:ObsahData}
+
+Na samotném konci textu práce je uveden stručný popis obsahu
+elektronických dat odevzdaných v systému katedry informatiky spolu s
+textem. Tato data jsou nedílnou součástí práce a tvoří (datovou)
+přílohu textu práce. Povinné položky struktury dat jsou:
+
+\begin{description}
+
+\item[\texttt{text/}] \hfill \\
+  Adresář s textem práce ve formátu PDF, vytvořený s~použitím
+  závazného stylu KI PřF UP v~Olomouci pro závěrečné práce, včetně
+  všech (textových) příloh, a~všechny soubory potřebné pro
+  bezproblémové vytvoření PDF dokumentu textu (případně v~ZIP
+  archivu), tj.~zdrojový text textu a příloh, vložené obrázky, apod.
+
+\item[\texttt{README.*}] \hfill \\
+  Textový soubor (s příponou např. \texttt{.txt}) s informacemi o
+  opakovatelném způsobu použití ostatních dat práce -- typicky plně
+  reprodukovatelný co nejúplnější funkční postup zprovoznění software
+  vytvořeného v~rámci práce, tzn. jeho případné instalace/nasazení a
+  spuštění, včetně uvedení všech požadavků pro bezproblémový provoz;
+  za zprovoznění software se nepovažuje zpřístupnění (např. po
+  Internetu) již někde zprovozněného software.
+
+\item[\texttt{*}] \hfill \\
+  Adresáře a soubory s veškerými ostatními autorskými daty práce
+  (případně v~ZIP archivu) -- typicky spustitelné a další soubory
+  software vytvořeného v rámci práce potřebné pro bezproblémový provoz
+  software, případně jeho instalační program, a kompletní zdrojové
+  texty software a další data nutná pro plně reprodukovatelné korektní
+  vytvoření spustitelných souborů.
+
+\end{description}
+
+Dále mohou data obsahovat například:
+
+\begin{itemize}
+
+%\item[\texttt{data/}] \hfill \\
+\item
+  ukázková a~testovací data použitá v~práci nebo pro potřeby posouzení
+  práce v rámci její obhajoby,
+
+%\item[\texttt{literature/}] \hfill \\
+\item
+  položky bibliografie v elektronické podobě, příp.~jiná relevantní literatura
+  a dokumentace vztahující se k~práci,
+
+%\item[\texttt{install/}] \hfill \\
+\item
+  cizí data (software) potřebná pro bezproblémové použití autorských
+  dat práce (software), která nejsou standardní součástí
+  předpokládaného (softwarového) vybavení uživatele.
+
+\end{itemize}
+
+U veškerých cizích obsažených materiálů jejich
+zahrnutí dovolují podmínky pro jejich veřejné šíření nebo přiložený souhlas
+držitele práv k užití. Pro všechny použité (a~citované) materiály,
+u~kterých toto není splněno a~nejsou tak obsaženy, je uveden
+jejich zdroj, např.~webová adresa, v~bibliografii nebo textu práce
+nebo souboru \texttt{README.*}.
+
+%% -------------------------------------------------------------------
+
+%% Sazba volitelného seznamu zkratek, za přílohami.
+\printglossary
+
+%% Sazba povinné bibliografie, za přílohami (případně i za seznamem
+%% zkratek). Při použití BibLaTeXu použijte makro
+%% \printbibliography. jinak prostředí thebibliography. Ne obojí!
+
+%% Sazba i v textu necitovaných zdrojů, při použití
+%% BibLaTeXu. Volitelné.
+\nocite{*}
+%% Vlastní sazba bibliografie při použití BibLaTeXu.
+\printbibliography
+
+%% Bibliografie, včetně sazby, při NEpoužití BibLaTeXu.
+% \begin{thebibliography}{9}
+%\bibitem{kniha2} \uppercase{Hawke}, Paul. NanoHttpd: Light-weight HTTP server designed for embedding in other applications. GitHub [online]. 2014-05-12. [cit. 2014-12-06]. Dostupné z: \url{https://github.com/NanoHttpd/nanohttpd}
+%
+%\bibitem{jeske13} \uppercase{Jeske}, David; \uppercase{Novák}, Josef. Simple HTTP Server in \csharp: Threaded synchronous HTTP Server abstract class, to respond to HTTP requests. CodeProject: For those who code [online]. 2014-05-24. [cit. 2014-12-06]. Dostupné z: \url{http://www.codeproject.com/Articles/137979/Simple-HTTP-Server-in-C}
+%
+%\bibitem{uzis2012} \uppercase{ÚSTAV ZDRAVOTNICKÝCH INFORMACÍ A STATISTIKY ČR}. Lékaři, zubní lékaři a farmaceuti 2012 [online]. Praha 2, Palackého náměstí 4: Ústav zdravotnických informací a statistiky ČR, 2012 [cit. 2014-12-06]. ISBN 978-80-7472-089-5. Dostupné z: \url{http://www.uzis.cz/publikace/lekari-zubni-lekari-farmaceuti-2012}
+% \end{thebibliography}
+
+%% Sazba volitelného rejstříku, za bibliografií.
+\printindex
+
+\end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
