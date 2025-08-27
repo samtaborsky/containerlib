@@ -12,3 +12,7 @@ func TestFunctionContainers() {
 	client.TestFunctionClient()
 	util.TestFunctionParse()
 }
+
+func DevTest() {
+	fmt.Println("Hello DevTest!")
+}
