@@ -76,3 +76,18 @@ func mapFromMobyError(err error, override ...error) error {
 
 	return fmt.Errorf("%w: %w", types.ErrInternal, err)
 }
+
+// toNanoCPUs converts regular allocation of CPUs (e.g. 0.5 cores) to NanoCPUs used by Docker SDK.
+func toNanoCPUs(cpus float64) int64 {
+	return int64(cpus * 1e9)
+}
+
+// megabytesToBytes converts megabytes to bytes.
+func megabytesToBytes(mb int64) int64 {
+	return mb * (1024 * 1024)
+}
+
+// bytesToMegabytes converts bytes to megabytes.
+func bytesToMegabytes(b uint64) uint64 {
+	return b / (1024 * 1024)
+}

@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"net/netip"
 	"time"
 
@@ -21,14 +22,14 @@ import (
 func (rt *runtime) ContainerCreate(ctx context.Context, cfg *types.ContainerCreateConfig) (types.ContainerCreateResult, error) {
 	mobyOpts, err := toMobyContainerConfig(cfg)
 	if err != nil {
-		return "", fmt.Errorf("%w: %w", types.ErrInvalidInput, err)
+		return types.ContainerCreateResult{}, fmt.Errorf("%w: %w", types.ErrInvalidInput, err)
 	}
 	resp, err := rt.api.ContainerCreate(ctx, mobyOpts)
 	if err != nil {
-		return "", mapFromMobyError(err, types.ErrImageNotFound)
+		return types.ContainerCreateResult{}, mapFromMobyError(err, types.ErrImageNotFound)
 	}
 
-	return types.ContainerCreateResult(resp.ID), nil
+	return types.ContainerCreateResult{ID: resp.ID}, nil
 }
 
 func (rt *runtime) ContainerStart(ctx context.Context, id string, opts *types.ContainerStartOptions) error {
@@ -67,21 +68,21 @@ func (rt *runtime) ContainerList(ctx context.Context, opts *types.ContainerListO
 func (rt *runtime) ContainerWait(ctx context.Context, id string, opts *types.ContainerWaitOptions) (types.ContainerWaitResult, error) {
 	mobyOpts, err := toMobyContainerWaitOpts(opts)
 	if err != nil {
-		return -1, fmt.Errorf("%w: %w", types.ErrInvalidInput, err)
+		return types.ContainerWaitResult{}, fmt.Errorf("%w: %w", types.ErrInvalidInput, err)
 	}
 	resp := rt.api.ContainerWait(ctx, id, mobyOpts)
 	errCh, resCh := resp.Error, resp.Result
 
 	select {
 	case err := <-errCh:
-		return -1, mapFromMobyError(err)
+		return types.ContainerWaitResult{}, mapFromMobyError(err)
 	case res := <-resCh:
 		if res.Error != nil {
-			return types.ContainerWaitResult(res.StatusCode), mapFromMobyError(errors.New(res.Error.Message))
+			return types.ContainerWaitResult{ExitCode: res.StatusCode}, mapFromMobyError(errors.New(res.Error.Message))
 		}
-		return types.ContainerWaitResult(res.StatusCode), nil
+		return types.ContainerWaitResult{ExitCode: res.StatusCode}, nil
 	case <-ctx.Done():
-		return -1, mapFromMobyError(ctx.Err())
+		return types.ContainerWaitResult{}, mapFromMobyError(ctx.Err())
 	}
 }
 
@@ -96,7 +97,7 @@ func (rt *runtime) ContainerExec(ctx context.Context, id string, opts *types.Con
 		return types.ContainerExecResult{}, mapFromMobyError(err)
 	}
 
-	resp, err := rt.api.ExecAttach(ctx, execRes.ID, client.ExecAttachOptions{})
+	resp, err := rt.api.ExecAttach(ctx, execRes.ID, client.ExecAttachOptions{TTY: opts.TTY})
 	if err != nil {
 		return types.ContainerExecResult{}, mapFromMobyError(err)
 	}
@@ -113,29 +114,52 @@ func (rt *runtime) ContainerExec(ctx context.Context, id string, opts *types.Con
 		return types.ContainerExecResult{}, mapFromMobyError(err)
 	}
 
-	res := types.ContainerExecResult{
-		ExitCode: int64(inspect.ExitCode),
+	outWriter := opts.Stdout
+	if outWriter == nil {
+		outWriter = io.Discard
 	}
-	if opts.AttachStdout {
-		res.Stdout = stdout.String()
+	errWriter := opts.Stderr
+	if errWriter == nil {
+		errWriter = io.Discard
 	}
-	if opts.AttachStderr {
-		res.Stderr = stdout.String()
+
+	if opts.TTY {
+		_, err = io.Copy(outWriter, resp.Reader)
+	} else {
+		_, err = stdcopy.StdCopy(outWriter, errWriter, resp.Reader)
 	}
-	return res, nil
+	if err != nil {
+		return types.ContainerExecResult{}, fmt.Errorf("stream execution failed: %w", err)
+	}
+
+	return types.ContainerExecResult{ExitCode: int64(inspect.ExitCode)}, nil
 }
 
 func (rt *runtime) ContainerLogs(ctx context.Context, id string, opts *types.ContainerLogsOptions) (types.ContainerLogsResult, error) {
+	ret := types.ContainerLogsResult{}
 	mobyOpts, err := toMobyContainerLogsOpts(opts)
 	if err != nil {
-		return nil, mapFromMobyError(err)
+		return ret, mapFromMobyError(err)
 	}
 	resp, err := rt.api.ContainerLogs(ctx, id, mobyOpts)
 	if err != nil {
-		return nil, mapFromMobyError(err)
+		return ret, mapFromMobyError(err)
 	}
 
-	return resp, nil
+	outWriter := opts.Stdout
+	if outWriter == nil {
+		outWriter = io.Discard
+	}
+	errWriter := opts.Stderr
+	if errWriter == nil {
+		errWriter = io.Discard
+	}
+
+	_, err = stdcopy.StdCopy(outWriter, errWriter, resp)
+	if err != nil && err != io.EOF {
+		return ret, fmt.Errorf("failed to stream logs: %w", err)
+	}
+	return ret, nil
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -152,9 +176,12 @@ func toMobyContainerConfig(cfg *types.ContainerCreateConfig) (client.ContainerCr
 	}
 
 	containerCfg := &container.Config{
-		Image:  cfg.Image,
-		Labels: cfg.Labels,
-		Env:    mapToEnv(cfg.Env),
+		Image:      cfg.Image,
+		User:       cfg.User,
+		Env:        mapToEnv(cfg.Env),
+		Labels:     cfg.Labels,
+		Cmd:        cfg.Cmd,
+		Entrypoint: cfg.Entrypoint,
 	}
 
 	restartPolicy := cfg.Restart
@@ -168,8 +195,9 @@ func toMobyContainerConfig(cfg *types.ContainerCreateConfig) (client.ContainerCr
 		Mounts: toMobyMounts(cfg.Mounts),
 		Resources: container.Resources{
 			NanoCPUs: toNanoCPUs(cfg.CPUs),
-			Memory:   toBytes(cfg.MemoryMb),
+			Memory:   megabytesToBytes(cfg.MemoryMb),
 		},
+		Privileged: cfg.Privileged,
 	}
 
 	portMap, err := toMobyPortMap(cfg.Ports)
@@ -295,11 +323,13 @@ func toMobyExecCreateOpts(opts *types.ContainerExecOptions) (client.ExecCreateOp
 	}
 
 	return client.ExecCreateOptions{
+		User:         opts.User,
 		Cmd:          opts.Cmd,
-		AttachStdout: opts.AttachStdout,
-		AttachStderr: opts.AttachStderr,
 		WorkingDir:   opts.WorkingDir,
 		Env:          opts.Env,
+		TTY:          opts.TTY,
+		AttachStdout: opts.Stdout != nil,
+		AttachStderr: opts.Stderr != nil,
 	}, nil
 }
 
@@ -309,13 +339,15 @@ func toMobyContainerLogsOpts(opts *types.ContainerLogsOptions) (client.Container
 		return client.ContainerLogsOptions{}, fmt.Errorf("options cannot be nil")
 	}
 
-	if !opts.ShowStdout && !opts.ShowStderr {
-		return client.ContainerLogsOptions{}, fmt.Errorf("one of ShowStdout, ShowStderr must be true")
+	showStdout := opts.Stdout != nil
+	showStderr := opts.Stderr != nil
+	if !showStdout && !showStderr {
+		return client.ContainerLogsOptions{}, fmt.Errorf("one of Stdout, Stderr must be not be nil")
 	}
 
 	return client.ContainerLogsOptions{
-		ShowStdout: opts.ShowStdout,
-		ShowStderr: opts.ShowStderr,
+		ShowStdout: showStdout,
+		ShowStderr: showStderr,
 		Since:      mapToMobyTime(opts.Since),
 		Until:      mapToMobyTime(opts.Until),
 		Timestamps: opts.Timestamps,
@@ -383,14 +415,4 @@ func mapToEnv(env map[string]string) []string {
 		res = append(res, fmt.Sprintf("%s=%s", k, v))
 	}
 	return res
-}
-
-// toNanoCPUs converts regular allocation of CPUs (e.g. 0.5 cores) to NanoCPUs used by Docker SDK.
-func toNanoCPUs(cpus float64) int64 {
-	return int64(cpus * 1e9)
-}
-
-// toBytes converts megabytes to bytes.
-func toBytes(mb int64) int64 {
-	return mb * 1024 * 1024
 }

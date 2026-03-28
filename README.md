@@ -3,9 +3,10 @@
 `containerlib` is a Go library that provides abstraction from different container management runtimes.
 With one code, it is possible to work with containers running on different backends (for now, only Docker is supported).
 
-[Go Report Card](https://goreportcard.com/report/github.com/samtaborsky/containerlib)
-| [Go Packages](https://pkg.go.dev/github.com/samtaborsky/containerlib)
-| [License](https://mit-license.org/)
+[![Go Report Card](https://goreportcard.com/badge/github.com/samtaborsky/containerlib)](https://goreportcard.com/report/github.com/samtaborsky/containerlib)
+
+[Go Packages](https://pkg.go.dev/github.com/samtaborsky/containerlib) |
+[License](https://mit-license.org/)
 
 ---
 

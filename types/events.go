@@ -26,16 +26,16 @@ type EventsStreamResult struct {
 // Event contains data about the event.
 type Event struct {
 	// Type represens the type of the event.
-	Type EventType
+	Type EventType `json:"type"`
 
 	// Action represents the event action.
-	Action EventAction
+	Action EventAction `json:"action"`
 
 	// Actor represents the actor of the event.
-	Actor EventActor
+	Actor EventActor `json:"actor"`
 
 	// Time specifies the time of the event happening.
-	Time time.Time
+	Time time.Time `json:"time"`
 }
 
 // EventType represents the type of event (the type of resource that generated it).
