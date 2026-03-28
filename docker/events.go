@@ -17,41 +17,7 @@ func (rt *runtime) EventsStream(ctx context.Context, opts *types.EventsStreamOpt
 	outEvents := make(chan types.Event)
 	outErrors := make(chan error, 1)
 
-	go func() {
-		defer close(outEvents)
-		defer close(outErrors)
-
-		for {
-			select {
-			case <-ctx.Done():
-				outErrors <- mapFromMobyError(ctx.Err())
-				return
-			case event, ok := <-resp.Messages:
-				if !ok {
-					return
-				}
-				if !isSupportedEventType(event.Type) || !isSupportedEventAction(event.Action) {
-					continue
-				}
-
-				outEvent := types.Event{
-					Type:   types.EventType(event.Type),
-					Action: types.EventAction(event.Action),
-					Actor:  types.EventActor{ID: event.Actor.ID},
-					Time:   time.Unix(0, event.TimeNano),
-				}
-				outEvents <- outEvent
-			case err, ok := <-resp.Err:
-				if !ok {
-					return
-				}
-				if err != nil {
-					outErrors <- mapFromMobyError(err)
-				}
-				return
-			}
-		}
-	}()
+	go streamEvents(ctx, resp, outEvents, outErrors)
 
 	return types.EventsStreamResult{
 		Events: outEvents,
@@ -75,6 +41,55 @@ func toMobyEventsOpts(opts *types.EventsStreamOptions) client.EventsListOptions 
 		Since:   mapToMobyTime(opts.Since),
 		Until:   mapToMobyTime(opts.Until),
 		Filters: filters,
+	}
+}
+
+// streamEvents continuously listens to the Docker daemon's event stream, filtering and mapping generic Moby event
+// structs into types.Event structs.
+//
+// This function is designed to run as a background goroutine. It assumes full ownership of the provided output
+// channels, ensuring they are all properly closed when the stream terminates.
+//
+// The streaming loop will run indefinitely until one of three things happens:
+//
+// 1. The provided context is canceled or times out.
+//
+// 2. The underlying Docker messages channel is closed.
+//
+// 3. A fatal error is received from the underlying Docker error channel.
+func streamEvents(ctx context.Context, resp client.EventsResult, outEvents chan<- types.Event, outErrors chan<- error) {
+	defer close(outEvents)
+	defer close(outErrors)
+
+	for {
+		select {
+		case <-ctx.Done():
+			outErrors <- mapFromMobyError(ctx.Err())
+			return
+		case event, ok := <-resp.Messages:
+			if !ok {
+				return
+			}
+			if !isSupportedEventType(event.Type) || !isSupportedEventAction(event.Action) {
+				continue
+			}
+
+			outEvent := types.Event{
+				Type:   types.EventType(event.Type),
+				Action: types.EventAction(event.Action),
+				Actor:  types.EventActor{ID: event.Actor.ID},
+				Time:   time.Unix(0, event.TimeNano),
+			}
+			outEvents <- outEvent
+		case err, ok := <-resp.Err:
+			if !ok {
+				return
+			}
+			if err != nil {
+				outErrors <- mapFromMobyError(err)
+			}
+			return
+		}
 	}
 }
 

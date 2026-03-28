@@ -7,9 +7,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"time"
 
 	"github.com/distribution/reference"
+	"github.com/moby/moby/api/types/jsonstream"
 	"github.com/moby/moby/api/types/registry"
 	"github.com/moby/moby/client"
 	"github.com/samtaborsky/containerlib/types"
@@ -43,11 +45,7 @@ func (rt *runtime) ImagePull(ctx context.Context, name string, opts *types.Image
 	}
 	defer resp.Close()
 
-	if err := resp.Wait(ctx); err != nil {
-		return fmt.Errorf("image pull failed: %w", err)
-	}
-
-	return nil
+	return decodePullStream(ctx, resp, opts.Progress)
 }
 
 func (rt *runtime) ImageInspect(ctx context.Context, id string, opts *types.ImageInspectOptions) (types.ImageInspectResult, error) {
@@ -216,4 +214,79 @@ func encodeRegistryAuth(auth types.AuthConfig) (string, error) {
 	}
 
 	return base64.URLEncoding.EncodeToString(encodedAuth), nil
+}
+
+// decodePullStream continuously reads and decodes the raw JSON image pull stream from the Docker daemon,
+// mapping it into types.ImagePullProgress.
+// This works only when the Progress channel inside types.ImagePullOptions exists. When it does not, the function
+// waits silently for the pull to complete and then returns.
+//
+// This function is designed to run as a background goroutine. It assumes full ownership of the provided io.ReadCloser
+// and output channel, ensuring they are all properly closed when the stream terminates.
+//
+// The decoding loop will run indefinitely until one of three things happens:
+//
+// 1. The provided context is canceled or times out.
+//
+// 2. The Docker daemon closes the connection (io.EOF).
+//
+// 3. The JSON stream becomes corrupted or unreadable.
+func decodePullStream(ctx context.Context, resp client.ImagePullResponse, out chan<- types.ImagePullProgress) error {
+	if out == nil {
+		if err := resp.Wait(ctx); err != nil {
+			return fmt.Errorf("image pull failed: %w", err)
+		}
+		return nil
+	}
+
+	defer close(out)
+
+	decoder := json.NewDecoder(resp)
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+			var msg jsonstream.Message
+			if err := decoder.Decode(&msg); err != nil {
+				if err != io.EOF {
+					return fmt.Errorf("pull stream decode failure: %w", err)
+				}
+				return nil
+			}
+
+			if msg.Error != nil {
+				return fmt.Errorf("pull error (code %d): %s", msg.Error.Code, msg.Error.Message)
+			}
+
+			out <- mapToPullProgress(msg)
+		}
+	}
+}
+
+// mapToPullProgress transforms jsonstream.Message into types.ImagePullProgress.
+func mapToPullProgress(msg jsonstream.Message) types.ImagePullProgress {
+	var digest string
+	if msg.Aux != nil {
+		var auxData struct {
+			ID string `json:"ID"`
+		}
+		if err := json.Unmarshal(*msg.Aux, &auxData); err == nil && auxData.ID != "" {
+			digest = auxData.ID
+		}
+	}
+
+	var progressCurrent, progressTotal int64
+	if msg.Progress != nil {
+		progressCurrent = msg.Progress.Current
+		progressTotal = msg.Progress.Total
+	}
+
+	return types.ImagePullProgress{
+		ID:      msg.ID,
+		Status:  msg.Status,
+		Current: progressCurrent,
+		Total:   progressTotal,
+		Digest:  digest,
+	}
 }

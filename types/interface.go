@@ -12,6 +12,7 @@ type Runtime interface {
 	ContainerOps
 	ImageOps
 	EventOps
+	TelemetryOps
 }
 
 // SystemOps represents a set of methods for managing the host container runtime.
@@ -72,10 +73,14 @@ type ContainerOps interface {
 	ContainerLogs(ctx context.Context, id string, opts *ContainerLogsOptions) (ContainerLogsResult, error)
 }
 
-// ImageOps represents a set of methods for managing images on the host
+// ImageOps represents a set of methods for managing images on the host.
 type ImageOps interface {
 	// ImagePull pulls an image from a container registry.
 	// If the image name does not contain a registry address, docker.io registry is used.
+	//
+	// If the Progress channel in ImagePullOptions exists, the operation will populate it with
+	// ImagePullProgress messages containing information about the progress.
+	// If the channel is nil, the function will return after the image has been pulled.
 	ImagePull(ctx context.Context, name string, opts *ImagePullOptions) error
 
 	// ImageInspect returns an ImageInspectResult containing information about an image with the provided ID.
@@ -93,9 +98,16 @@ type ImageOps interface {
 	ImagePrune(ctx context.Context, opts *ImagePruneOptions) (ImagePruneResult, error)
 }
 
-// EventOps represents a set of methods for monitoring events from containers on the host
+// EventOps represents a set of methods for monitoring events from containers on the host.
 type EventOps interface {
 	// EventsStream returns an EventsStreamResult containing channels for events and errors on the
 	// host system.
 	EventsStream(ctx context.Context, opts *EventsStreamOptions) EventsStreamResult
+}
+
+// TelemetryOps represents a set of methods for obtaining telemetry data from the container runtime.
+type TelemetryOps interface {
+	// ContainerStats returns a ContainerStatsResult containing information about resources used by
+	// the container with the provided ID.
+	ContainerStats(ctx context.Context, id string, opts *ContainerStatsOptions) (ContainerStatsResult, error)
 }
