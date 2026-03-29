@@ -32,7 +32,7 @@ func (rt *runtime) ContainerCreate(ctx context.Context, cfg *types.ContainerCrea
 	return types.ContainerCreateResult{ID: resp.ID}, nil
 }
 
-func (rt *runtime) ContainerStart(ctx context.Context, id string, opts *types.ContainerStartOptions) error {
+func (rt *runtime) ContainerStart(ctx context.Context, id string, _ *types.ContainerStartOptions) error {
 	_, err := rt.api.ContainerStart(ctx, id, client.ContainerStartOptions{})
 	return mapFromMobyError(err, types.ErrContainerNotFound)
 }

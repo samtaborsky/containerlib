@@ -48,7 +48,7 @@ func (rt *runtime) ImagePull(ctx context.Context, name string, opts *types.Image
 	return decodePullStream(ctx, resp, opts.Progress)
 }
 
-func (rt *runtime) ImageInspect(ctx context.Context, id string, opts *types.ImageInspectOptions) (types.ImageInspectResult, error) {
+func (rt *runtime) ImageInspect(ctx context.Context, id string, _ *types.ImageInspectOptions) (types.ImageInspectResult, error) {
 	resp, err := rt.api.ImageInspect(ctx, id)
 	if err != nil {
 		return types.ImageInspectResult{}, mapFromMobyError(err)

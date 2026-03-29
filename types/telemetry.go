@@ -4,17 +4,18 @@ package types
 
 import "time"
 
-// ContainerStatsOptions hoolds optional arguments used for retrieving resource usage information.
+// ContainerStatsOptions holds optional arguments used for retrieving resource usage information.
 type ContainerStatsOptions struct {
 	Stream bool
 }
 
+// ContainerStatsResult contains resource usage information of a container.
 type ContainerStatsResult struct {
 	Stats  <-chan ContainerStats
 	Errors <-chan error
 }
 
-// ContainerStatsResult contains information about the current resource usage of a container.
+// ContainerStats contains information about the resource usage of a container at a given time.
 type ContainerStats struct {
 	// ID represents the container ID.
 	ID string `json:"id"`
