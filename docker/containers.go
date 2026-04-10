@@ -268,7 +268,7 @@ func toMobyContainerStopOpts(opts *types.ContainerStopOptions) client.ContainerS
 	}
 }
 
-// toMobyContainerRestartOpts transfroms types.ContainerRestartOptions into a generic type required by the Docker SDK.
+// toMobyContainerRestartOpts transforms types.ContainerRestartOptions into a generic type required by the Docker SDK.
 func toMobyContainerRestartOpts(opts *types.ContainerRestartOptions) client.ContainerRestartOptions {
 	if opts == nil {
 		return client.ContainerRestartOptions{}
