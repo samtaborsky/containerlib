@@ -6,13 +6,13 @@ package types
 // It is used when there is need to access files or directories inside the container from the host.
 type Mount struct {
 	// Source specifies the path on the host or a volume name.
-	Source string
+	Source string `json:"source"`
 	// Destination specifies the path inside the container.
-	Destination string
+	Destination string `json:"destination"`
 
 	// Type specifies the mount type (e.g. "bind", "volume").
-	Type string
+	Type string `json:"type"`
 
 	// ReadOnly specifies if the mount is read-only.
-	ReadOnly bool
+	ReadOnly bool `json:"readOnly"`
 }

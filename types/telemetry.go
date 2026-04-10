@@ -6,7 +6,8 @@ import "time"
 
 // ContainerStatsOptions holds optional arguments used for retrieving resource usage information.
 type ContainerStatsOptions struct {
-	Stream bool
+	// Stream indicates whether to continuously stream stats from the container, or provide only a single sample.
+	Stream bool `json:"stream"`
 }
 
 // ContainerStatsResult contains resource usage information of a container.
@@ -52,8 +53,6 @@ type MemoryStats struct {
 	UsedPercent float64 `json:"usedPercent"`
 	// UsedMb specifies the amount of memory used by the container in megabytes.
 	UsedMb uint64 `json:"usedMb"`
-	// MaxUsedMb specifies the maximum recorded memory usage in megabytes.
-	MaxUsedMb uint64 `json:"maxUsedMb,omitempty"`
 	// LimitMb specifies the memory limit in megabytes.
-	LimitMb uint64 `json:"limitMb,omitempty"`
+	LimitMb uint64 `json:"limitMb"`
 }

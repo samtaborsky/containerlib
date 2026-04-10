@@ -3,7 +3,6 @@
 package docker
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -42,6 +41,21 @@ func (rt *runtime) ContainerStop(ctx context.Context, id string, opts *types.Con
 	return mapFromMobyError(err, types.ErrContainerNotFound)
 }
 
+func (rt *runtime) ContainerPause(ctx context.Context, id string, _ *types.ContainerPauseOptions) error {
+	_, err := rt.api.ContainerPause(ctx, id, client.ContainerPauseOptions{})
+	return mapFromMobyError(err, types.ErrContainerNotFound)
+}
+
+func (rt *runtime) ContainerUnpause(ctx context.Context, id string, _ *types.ContainerUnpauseOptions) error {
+	_, err := rt.api.ContainerUnpause(ctx, id, client.ContainerUnpauseOptions{})
+	return mapFromMobyError(err, types.ErrContainerNotFound)
+}
+
+func (rt *runtime) ContainerRestart(ctx context.Context, id string, opts *types.ContainerRestartOptions) error {
+	_, err := rt.api.ContainerRestart(ctx, id, toMobyContainerRestartOpts(opts))
+	return mapFromMobyError(err, types.ErrContainerNotFound)
+}
+
 func (rt *runtime) ContainerRemove(ctx context.Context, id string, opts *types.ContainerRemoveOptions) error {
 	_, err := rt.api.ContainerRemove(ctx, id, toMobyContainerRemoveOpts(opts))
 	return mapFromMobyError(err, types.ErrContainerNotFound)
@@ -53,7 +67,7 @@ func (rt *runtime) ContainerStatus(ctx context.Context, id string, opts *types.C
 		return types.ContainerStatusResult{}, mapFromMobyError(err, types.ErrContainerNotFound)
 	}
 
-	return fromMobyContainerStatus(resp.Container), nil
+	return fromMobyInspectResponse(resp.Container), nil
 }
 
 func (rt *runtime) ContainerList(ctx context.Context, opts *types.ContainerListOptions) (types.ContainerListResult, error) {
@@ -75,10 +89,11 @@ func (rt *runtime) ContainerWait(ctx context.Context, id string, opts *types.Con
 
 	select {
 	case err := <-errCh:
-		return types.ContainerWaitResult{}, mapFromMobyError(err)
+		return types.ContainerWaitResult{}, mapFromMobyError(err, types.ErrContainerNotFound)
 	case res := <-resCh:
 		if res.Error != nil {
-			return types.ContainerWaitResult{ExitCode: res.StatusCode}, mapFromMobyError(errors.New(res.Error.Message))
+			err := mapFromMobyError(errors.New(res.Error.Message))
+			return types.ContainerWaitResult{ExitCode: res.StatusCode}, fmt.Errorf("wait failed: %w", err)
 		}
 		return types.ContainerWaitResult{ExitCode: res.StatusCode}, nil
 	case <-ctx.Done():
@@ -103,17 +118,6 @@ func (rt *runtime) ContainerExec(ctx context.Context, id string, opts *types.Con
 	}
 	defer resp.Close()
 
-	var stdout, stderr bytes.Buffer
-	_, err = stdcopy.StdCopy(&stdout, &stderr, resp.Reader)
-	if err != nil {
-		return types.ContainerExecResult{}, fmt.Errorf("failed to copy stdout/stderr: %w", err)
-	}
-
-	inspect, err := rt.api.ExecInspect(ctx, execRes.ID, client.ExecInspectOptions{})
-	if err != nil {
-		return types.ContainerExecResult{}, mapFromMobyError(err)
-	}
-
 	outWriter := opts.Stdout
 	if outWriter == nil {
 		outWriter = io.Discard
@@ -132,6 +136,11 @@ func (rt *runtime) ContainerExec(ctx context.Context, id string, opts *types.Con
 		return types.ContainerExecResult{}, fmt.Errorf("stream execution failed: %w", err)
 	}
 
+	inspect, err := rt.api.ExecInspect(ctx, execRes.ID, client.ExecInspectOptions{})
+	if err != nil {
+		return types.ContainerExecResult{}, mapFromMobyError(err)
+	}
+
 	return types.ContainerExecResult{ExitCode: int64(inspect.ExitCode)}, nil
 }
 
@@ -139,7 +148,7 @@ func (rt *runtime) ContainerLogs(ctx context.Context, id string, opts *types.Con
 	ret := types.ContainerLogsResult{}
 	mobyOpts, err := toMobyContainerLogsOpts(opts)
 	if err != nil {
-		return ret, mapFromMobyError(err)
+		return ret, fmt.Errorf("%w: %w", types.ErrInvalidInput, err)
 	}
 	resp, err := rt.api.ContainerLogs(ctx, id, mobyOpts)
 	if err != nil {
@@ -224,14 +233,9 @@ func toMobyPortMap(ports []types.PortBinding) (network.PortMap, error) {
 
 		binding := network.PortBinding{
 			HostPort: fmt.Sprintf("%d", p.HostPort),
+			HostIP:   p.HostIP,
 		}
-		if p.HostIP != "" {
-			addr, err := netip.ParseAddr(p.HostIP)
-			if err != nil {
-				return nil, fmt.Errorf("invalid host IP '%s': %w", p.HostIP, err)
-			}
-			binding.HostIP = addr
-		}
+
 		bindingMap[dockerPort] = append(bindingMap[dockerPort], binding)
 	}
 	return bindingMap, nil
@@ -259,6 +263,18 @@ func toMobyContainerStopOpts(opts *types.ContainerStopOptions) client.ContainerS
 	}
 
 	return client.ContainerStopOptions{
+		Signal:  opts.Signal,
+		Timeout: opts.Timeout,
+	}
+}
+
+// toMobyContainerRestartOpts transfroms types.ContainerRestartOptions into a generic type required by the Docker SDK.
+func toMobyContainerRestartOpts(opts *types.ContainerRestartOptions) client.ContainerRestartOptions {
+	if opts == nil {
+		return client.ContainerRestartOptions{}
+	}
+
+	return client.ContainerRestartOptions{
 		Signal:  opts.Signal,
 		Timeout: opts.Timeout,
 	}
@@ -342,7 +358,7 @@ func toMobyContainerLogsOpts(opts *types.ContainerLogsOptions) (client.Container
 	showStdout := opts.Stdout != nil
 	showStderr := opts.Stderr != nil
 	if !showStdout && !showStderr {
-		return client.ContainerLogsOptions{}, fmt.Errorf("one of Stdout, Stderr must be not be nil")
+		return client.ContainerLogsOptions{}, fmt.Errorf("one of Stdout, Stderr must not be nil")
 	}
 
 	return client.ContainerLogsOptions{
@@ -357,9 +373,9 @@ func toMobyContainerLogsOpts(opts *types.ContainerLogsOptions) (client.Container
 	}, nil
 }
 
-// fromMobyContainerStatus transforms container.InspectResponse into types.ContainerStatusResult.
-func fromMobyContainerStatus(resp container.InspectResponse) types.ContainerStatusResult {
-	ipAddr := ""
+// fromMobyInspectResponse transforms container.InspectResponse into types.ContainerStatusResult.
+func fromMobyInspectResponse(resp container.InspectResponse) types.ContainerStatusResult {
+	ipAddr := netip.Addr{}
 	if resp.State.Status != "exited" {
 		ipAddr = getIPAddressFromNetworkSettings(resp.NetworkSettings)
 	}
@@ -376,13 +392,18 @@ func fromMobyContainerStatus(resp container.InspectResponse) types.ContainerStat
 func fromMobyContainerList(resp client.ContainerListResult) types.ContainerListResult {
 	var res []types.ContainerSummary
 	for _, c := range resp.Items {
+		t := time.Time{}
+		if c.Created != 0 {
+			t = time.Unix(c.Created, 0)
+		}
+
 		cont := types.ContainerSummary{
 			ID:      c.ID,
 			Names:   c.Names,
 			Image:   c.Image,
 			State:   string(c.State),
 			Status:  c.Status,
-			Created: time.Unix(c.Created, 0),
+			Created: t,
 			Labels:  c.Labels,
 		}
 		res = append(res, cont)
@@ -393,19 +414,27 @@ func fromMobyContainerList(resp client.ContainerListResult) types.ContainerListR
 }
 
 // getIPAddressFromNetworkSettings extracts an IP address from a container's network settings, if any exists.
-func getIPAddressFromNetworkSettings(net *container.NetworkSettings) string {
-	if net != nil {
-		if bridge, ok := net.Networks["bridge"]; ok && bridge.IPAddress.IsValid() {
-			return bridge.IPAddress.String()
-		}
+func getIPAddressFromNetworkSettings(net *container.NetworkSettings) netip.Addr {
+	if net == nil {
+		return netip.Addr{}
+	}
 
-		for _, n := range net.Networks {
-			if n.IPAddress.IsValid() {
-				return n.IPAddress.String()
-			}
+	networks := net.Networks
+	priority := []string{"bridge", "host", "overlay"}
+
+	for _, name := range priority {
+		if settings, ok := networks[name]; ok && settings.IPAddress.IsValid() {
+			return settings.IPAddress
 		}
 	}
-	return ""
+
+	for _, settings := range networks {
+		if settings.IPAddress.IsValid() {
+			return settings.IPAddress
+		}
+	}
+
+	return netip.Addr{}
 }
 
 // mapToEnv converts map[string]string to []string{"KEY=VAL"}.

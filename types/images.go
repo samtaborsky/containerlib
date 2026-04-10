@@ -7,7 +7,7 @@ import "time"
 // ImagePullOptions holds optional arguments used for pulling images from registry.
 type ImagePullOptions struct {
 	// All specifies whether to pull every single tag of the image.
-	All bool
+	All bool `json:"all"`
 
 	// Progress receives updates during the image pull.
 	// This channel will be closed when the pull is finished.
@@ -33,7 +33,7 @@ type ImagePullProgress struct {
 
 	// Digest is the final SHA256 identifier of the image.
 	// This is typically present in the final message in the stream.
-	Digest string `json:"message,omitempty"`
+	Digest string `json:"message"`
 }
 
 // ImageInspectOptions may hold future optional arguments used for inspecting images.
@@ -61,10 +61,10 @@ type ImageInspectResult struct {
 // ImageListOptions holds optional arguments used for listing images on the host.
 type ImageListOptions struct {
 	// All specifies whether to also list intermediate image layers.
-	All bool
+	All bool `json:"all"`
 
 	// Filters contain predicates for filtering the request.
-	Filters Filters
+	Filters Filters `json:"filters"`
 }
 
 // ImageListResult holds a list of images on the host system and basic information about them.
@@ -92,10 +92,10 @@ type ImageSummary struct {
 // ImageRemoveOptions holds optional arguments used for removing images.
 type ImageRemoveOptions struct {
 	// Force tells the daemon to remove the image even if there are stopped containers using it.
-	Force bool
+	Force bool `json:"force"`
 
 	// PruneChildren tells the daemon to clean up any not needed untagged parent layers.
-	PruneChildren bool
+	PruneChildren bool `json:"pruneChildren"`
 }
 
 // ImageRemoveResult holds a list of removed images (and tags).
@@ -106,15 +106,15 @@ type ImageRemoveResult struct {
 // ImageRemoveSummary contains information about the removed images.
 type ImageRemoveSummary struct {
 	// Untagged is the ID of the untagged image.
-	Untagged string `json:"untagged,omitempty"`
+	Untagged string `json:"untagged"`
 	// Deleted is the ID of the deleted image.
-	Deleted string `json:"deleted,omitempty"`
+	Deleted string `json:"deleted"`
 }
 
 // ImagePruneOptions holds optional arguments used for pruning dangling images.
 type ImagePruneOptions struct {
 	// Filters contains predicates for filtering the request.
-	Filters Filters
+	Filters Filters `json:"filters"`
 }
 
 // ImagePruneResult contains a summary of the Prune operation.

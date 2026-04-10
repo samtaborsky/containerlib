@@ -44,6 +44,18 @@ type ContainerOps interface {
 	// If the container is already stopped, no error is returned.
 	ContainerStop(ctx context.Context, id string, opts *ContainerStopOptions) error
 
+	// ContainerPause pauses the container with the provided ID.
+	// If the container is already paused, no error is returned.
+	ContainerPause(ctx context.Context, id string, opts *ContainerPauseOptions) error
+
+	// ContainerUnpause unpauses a previously paused container with the provided ID.
+	// If the container was not paused before calling the function, an error is returned.
+	ContainerUnpause(ctx context.Context, id string, opts *ContainerUnpauseOptions) error
+
+	// ContainerRestart restarts the container with the provided ID.
+	// If the container was not running before calling the function, it gets started.
+	ContainerRestart(ctx context.Context, id string, opts *ContainerRestartOptions) error
+
 	// ContainerRemove forcefully kills and removes a container with the provided ID.
 	// If the container is not running, it is only removed.
 	ContainerRemove(ctx context.Context, id string, opts *ContainerRemoveOptions) error

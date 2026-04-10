@@ -20,7 +20,7 @@ import (
 func (rt *runtime) ImagePull(ctx context.Context, name string, opts *types.ImagePullOptions) error {
 	imageRef, err := reference.ParseNormalizedNamed(name)
 	if err != nil {
-		return fmt.Errorf("invalid image name: %w", err)
+		return fmt.Errorf("%w: %w", types.ErrInvalidInput, err)
 	}
 
 	imageRef = reference.TagNameOnly(imageRef)
@@ -41,7 +41,7 @@ func (rt *runtime) ImagePull(ctx context.Context, name string, opts *types.Image
 
 	resp, err := rt.api.ImagePull(ctx, imageRef.String(), options)
 	if err != nil {
-		return mapFromMobyError(err)
+		return mapFromMobyError(err, types.ErrImageNotFound)
 	}
 	defer resp.Close()
 
@@ -51,7 +51,7 @@ func (rt *runtime) ImagePull(ctx context.Context, name string, opts *types.Image
 func (rt *runtime) ImageInspect(ctx context.Context, id string, _ *types.ImageInspectOptions) (types.ImageInspectResult, error) {
 	resp, err := rt.api.ImageInspect(ctx, id)
 	if err != nil {
-		return types.ImageInspectResult{}, mapFromMobyError(err)
+		return types.ImageInspectResult{}, mapFromMobyError(err, types.ErrImageNotFound)
 	}
 
 	return fromMobyImageInspectResult(resp), nil
@@ -69,7 +69,7 @@ func (rt *runtime) ImageList(ctx context.Context, opts *types.ImageListOptions) 
 func (rt *runtime) ImageRemove(ctx context.Context, id string, opts *types.ImageRemoveOptions) (types.ImageRemoveResult, error) {
 	resp, err := rt.api.ImageRemove(ctx, id, toMobyImageRemoveOpts(opts))
 	if err != nil {
-		return types.ImageRemoveResult{}, mapFromMobyError(err)
+		return types.ImageRemoveResult{}, mapFromMobyError(err, types.ErrImageNotFound)
 	}
 
 	return fromMobyImageRemoveResult(resp), nil
@@ -81,7 +81,7 @@ func (rt *runtime) ImagePrune(ctx context.Context, opts *types.ImagePruneOptions
 		return types.ImagePruneResult{}, mapFromMobyError(err)
 	}
 
-	return fromMobyImagePruneReport(resp), nil
+	return fromMobyImagePruneResult(resp), nil
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -153,9 +153,14 @@ func fromMobyImageInspectResult(resp client.ImageInspectResult) types.ImageInspe
 func fromMobyImageListResult(resp client.ImageListResult) types.ImageListResult {
 	var res []types.ImageSummary
 	for _, i := range resp.Items {
+		t := time.Time{}
+		if i.Created != 0 {
+			t = time.Unix(i.Created, 0)
+		}
+
 		img := types.ImageSummary{
 			ID:      i.ID,
-			Created: time.Unix(i.Created, 0),
+			Created: t,
 			Size:    i.Size,
 			Tags:    i.RepoTags,
 			Labels:  i.Labels,
@@ -182,8 +187,8 @@ func fromMobyImageRemoveResult(resp client.ImageRemoveResult) types.ImageRemoveR
 	}
 }
 
-// fromMobyImagePruneReport transforms client.ImagePruneResult into types.ImagePruneResult.
-func fromMobyImagePruneReport(resp client.ImagePruneResult) types.ImagePruneResult {
+// fromMobyImagePruneResult transforms client.ImagePruneResult into types.ImagePruneResult.
+func fromMobyImagePruneResult(resp client.ImagePruneResult) types.ImagePruneResult {
 	res := types.ImagePruneResult{
 		SpaceReclaimed: resp.Report.SpaceReclaimed,
 	}
@@ -241,18 +246,13 @@ func decodePullStream(ctx context.Context, resp client.ImagePullResponse, out ch
 
 	defer close(out)
 
-	decoder := json.NewDecoder(resp)
-	for {
+	for msg, err := range resp.JSONMessages(ctx) {
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
+			return mapFromMobyError(ctx.Err())
 		default:
-			var msg jsonstream.Message
-			if err := decoder.Decode(&msg); err != nil {
-				if err != io.EOF {
-					return fmt.Errorf("pull stream decode failure: %w", err)
-				}
-				return nil
+			if err != nil && err != io.EOF {
+				return mapFromMobyError(err)
 			}
 
 			if msg.Error != nil {
@@ -262,6 +262,7 @@ func decodePullStream(ctx context.Context, resp client.ImagePullResponse, out ch
 			out <- mapToPullProgress(msg)
 		}
 	}
+	return nil
 }
 
 // mapToPullProgress transforms jsonstream.Message into types.ImagePullProgress.
