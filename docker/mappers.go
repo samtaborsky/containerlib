@@ -50,10 +50,13 @@ func mapFromMobyError(err error, override ...error) error {
 	if errors.As(err, &conflictErr) && conflictErr.Conflict() {
 		return fmt.Errorf("%w: %w", types.ErrConflict, err)
 	}
-	if strings.Contains(err.Error(), "Conflict") || strings.Contains(err.Error(), "already in use") {
+	if strings.Contains(err.Error(), "Conflict") || strings.Contains(err.Error(), "is not") {
 		return fmt.Errorf("%w: %w", types.ErrConflict, err)
 	}
 
+	if errdefs.IsConflict(err) {
+		return fmt.Errorf("%w: %w", types.ErrConflict, err)
+	}
 	if errdefs.IsNotFound(err) {
 		finalError := types.ErrNotFound
 		if len(override) > 0 {
@@ -64,7 +67,7 @@ func mapFromMobyError(err error, override ...error) error {
 	if errdefs.IsPermissionDenied(err) {
 		return fmt.Errorf("%w: %w", types.ErrPermissionsDenied, err)
 	}
-	if errdefs.IsUnavailable(err) {
+	if client.IsErrConnectionFailed(err) {
 		return fmt.Errorf("%w: %w", types.ErrConnectionFailed, err)
 	}
 	if errdefs.IsInvalidArgument(err) {

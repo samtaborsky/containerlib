@@ -9,12 +9,12 @@ import (
 // EventsStreamOptions holds optional arguments for filtering which events get sent from the daemon.
 type EventsStreamOptions struct {
 	// Since represents a time from which onward events should be returned.
-	Since time.Time
+	Since time.Time `json:"since"`
 	// Until represents a time up to which events should be returned.
-	Until time.Time
+	Until time.Time `json:"until"`
 
 	// Filters contain predicates for filtering the request.
-	Filters Filters
+	Filters Filters `json:"filters,omitempty"`
 }
 
 // EventsStreamResult holds streams of errors and events from the daemon.
@@ -94,6 +94,9 @@ const (
 
 	// EventActionDelete indicates that a resource (typically an image) was deleted from the host.
 	EventActionDelete EventAction = "delete"
+
+	// EventActionPull indicates that an image was pulled from a registry.
+	EventActionPull EventAction = "pull"
 )
 
 // EventActor contains information about the resource that generated the event.

@@ -15,7 +15,7 @@ import (
 var _ types.Runtime = (*runtime)(nil)
 
 type runtime struct {
-	api       *client.Client
+	api       client.APIClient
 	mu        sync.RWMutex
 	authStore map[string]types.AuthConfig
 }
@@ -38,7 +38,9 @@ func New(host string) (types.Runtime, error) {
 		return nil, mapFromMobyError(err)
 	}
 
-	return &runtime{api: cli}, nil
+	authStore := make(map[string]types.AuthConfig)
+
+	return &runtime{api: cli, authStore: authStore}, nil
 }
 
 func (rt *runtime) Info(ctx context.Context) (types.InfoResult, error) {

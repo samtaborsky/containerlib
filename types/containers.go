@@ -3,28 +3,28 @@
 package types
 
 import (
-	"fmt"
 	"io"
+	"net/netip"
 	"time"
 )
 
 // AuthConfig contains authentication information for a container registry.
 type AuthConfig struct {
-	Username string
-	Password string
+	Username string `json:"username"`
+	Password string `json:"password"`
 	// ServerAddress is the image registry address.
 	// If no ServerAddress is provided, docker.io is used.
-	ServerAddress string
+	ServerAddress string `json:"serverAddress"`
 
 	// IdentityToken is a specialized session token.
 	// If provided, it is used instead of a password to negotiate an
 	// access token with the container registry authentication server.
-	IdentityToken string
+	IdentityToken string `json:"identityToken"`
 
 	// RegistryToken is a raw bearer-token (usually a JWT) used mainly in
 	// CI/CD environments to bypass username/password negotiation and provide
 	// immediate, temporary access.
-	RegistryToken string
+	RegistryToken string `json:"registryToken"`
 }
 
 // ContainerCreateConfig represents the configuration needed for the creation of a new container.
@@ -82,25 +82,45 @@ type ContainerStartOptions struct {
 // ContainerStopOptions holds optional arguments used for stopping containers.
 type ContainerStopOptions struct {
 	// Signal specifies a signal to be (gracefully) sent to the container (default is "SIGTERM").
-	Signal string
+	Signal string `json:"signal"`
 	// Timeout specifies a time (in seconds) to wait for the container to stop gracefully
 	// before forcibly terminating it with "SIGKILL".
-	Timeout *int
+	//
+	// Use nil to use the default timeout , -1 to wait indefinitely and 0 to immediately forced termination.
+	Timeout *int `json:"timeout,omitempty"`
+}
+
+// ContainerPauseOptions may hold future optional arguments used for pausing containers.
+type ContainerPauseOptions struct {
+}
+
+// ContainerUnpauseOptions may hold future optional arguments used for unpausing containers.
+type ContainerUnpauseOptions struct {
+}
+
+// ContainerRestartOptions holds optional arguments used for restarting containers.
+type ContainerRestartOptions struct {
+	Signal string `json:"signal"`
+	// Timeout specifies a time (in seconds) to wait for the container to stop gracefully
+	// before forcibly terminating it with "SIGKILL".
+	//
+	// Use nil to use the default timeout , -1 to wait indefinitely and 0 to immediately forced termination.
+	Timeout *int `json:"timeout,omitempty"`
 }
 
 // ContainerRemoveOptions holds optional arguments used for removing containers.
 type ContainerRemoveOptions struct {
 	// RemoveVolumes specifies whether volumes mounted to the container should also be removed.
-	RemoveVolumes bool
+	RemoveVolumes bool `json:"removeVolumes"`
 	// Force specifies whether the container should be forcibly terminated (if running) before removing it.
-	Force bool
+	Force bool `json:"force"`
 }
 
 // ContainerStatusOptions holds optional arguments used for inspecting containers.
 type ContainerStatusOptions struct {
 	// Size specifies whether to calculate the size of the container's filesystem (costly operation).
 	// It should not be used unless needed.
-	Size bool
+	Size bool `json:"size"`
 }
 
 // ContainerStatusResult represents the current status of a container.
@@ -111,7 +131,7 @@ type ContainerStatusResult struct {
 	// Status specifies the current state of the container (e.g. "running").
 	Status string `json:"status"`
 	// IPAddress specifies the IP address of the container.
-	IPAddress string `json:"ipAddress"`
+	IPAddress netip.Addr `json:"ipAddress"`
 
 	// ExitCode contains the exit code of the container, if it is stopped.
 	ExitCode int `json:"exitCode"`
@@ -120,10 +140,10 @@ type ContainerStatusResult struct {
 // ContainerListOptions holds optional arguments used for listing containers present on the host system.
 type ContainerListOptions struct {
 	// All specifies whether to also return non-running containers in the list.
-	All bool
+	All bool `json:"all"`
 
 	// Filters contain predicates for filtering the request.
-	Filters Filters
+	Filters Filters `json:"filters,omitempty"`
 }
 
 // ContainerListResult holds a list of containers on the host system and basic information about them.
@@ -156,7 +176,7 @@ type ContainerSummary struct {
 // ContainerWaitOptions holds optional arguments used for waiting on containers.
 type ContainerWaitOptions struct {
 	// Condition represents the specific condition which is being waited for.
-	Condition WaitCondition
+	Condition WaitCondition `json:"condition"`
 }
 
 // ContainerWaitResult holds the exit code of the exited container process.
@@ -167,9 +187,9 @@ type ContainerWaitResult struct {
 // ContainerExecOptions holds the command to be executed inside the container.
 type ContainerExecOptions struct {
 	// User specifies the user which will run the command.
-	User string
+	User string `json:"user"`
 	// Cmd holds the command and all its arguments. Must not be empty.
-	Cmd []string
+	Cmd []string `json:"cmd,omitempty"`
 
 	// Stdout specifies whether the content of Stdout will be returned as io.Writer.
 	// If empty, Stdout will be ignored.
@@ -179,27 +199,17 @@ type ContainerExecOptions struct {
 	Stderr io.Writer
 
 	// WorkingDir specifies the working directory to run the command.
-	WorkingDir string
+	WorkingDir string `json:"workingDir"`
 	// Env holds the environment variables.
-	Env []string
+	Env []string `json:"env,omitempty"`
 
 	// TTY specifies whether to allocate a pseudo-TTY, used e.g. for interactive commands or scripts.
-	TTY bool
+	TTY bool `json:"tty"`
 }
 
 // ContainerExecResult holds the exit code result from executing a command inside a container.
 type ContainerExecResult struct {
 	ExitCode int64 `json:"exitCode"`
-}
-
-func (opts *ContainerExecOptions) Validate() error {
-	if opts == nil {
-		return fmt.Errorf("ContainerExecOptions cannot be nil")
-	}
-	if len(opts.Cmd) == 0 {
-		return fmt.Errorf("ContainerExecOptions Command cannot be empty")
-	}
-	return nil
 }
 
 // ContainerLogsOptions holds optional parameters which affect the type and structure of returned logs.
@@ -215,23 +225,23 @@ type ContainerLogsOptions struct {
 	Stderr io.Writer
 
 	// Since represents a time from which onward logs should be returned.
-	Since time.Time
+	Since time.Time `json:"since"`
 	// Until represents a time up to which logs should be returned.
-	Until time.Time
+	Until time.Time `json:"until"`
 
 	// Timestamps specifies whether each line of logs will have its timestamp at the beginning.
-	Timestamps bool
+	Timestamps bool `json:"timestamps"`
 
 	// Follow keeps the connection open and continuously stream new logs as they are produced.
-	Follow bool
+	Follow bool `json:"follow"`
 
 	// Tail specifies how many lines from the end should be returned.
 	// It should be a stringified number or "all".
-	Tail string
+	Tail string `json:"tail"`
 
 	// Details specifies whether to include detailed information and metadata which were passed
 	// to the containers logging driver.
-	Details bool
+	Details bool `json:"details"`
 }
 
 // ContainerLogsResult may hold future optional information returned from the function.

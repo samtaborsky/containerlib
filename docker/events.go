@@ -17,7 +17,7 @@ func (rt *runtime) EventsStream(ctx context.Context, opts *types.EventsStreamOpt
 	outEvents := make(chan types.Event)
 	outErrors := make(chan error, 1)
 
-	go streamEvents(ctx, resp, outEvents, outErrors)
+	go streamMobyEvents(ctx, resp, outEvents, outErrors)
 
 	return types.EventsStreamResult{
 		Events: outEvents,
@@ -44,7 +44,7 @@ func toMobyEventsOpts(opts *types.EventsStreamOptions) client.EventsListOptions 
 	}
 }
 
-// streamEvents continuously listens to the Docker daemon's event stream, filtering and mapping generic Moby event
+// streamMobyEvents continuously listens to the Docker daemon's event stream, filtering and mapping generic Moby event
 // structs into types.Event structs.
 //
 // This function is designed to run as a background goroutine. It assumes full ownership of the provided output
@@ -57,7 +57,7 @@ func toMobyEventsOpts(opts *types.EventsStreamOptions) client.EventsListOptions 
 // 2. The underlying Docker messages channel is closed.
 //
 // 3. A fatal error is received from the underlying Docker error channel.
-func streamEvents(ctx context.Context, resp client.EventsResult, outEvents chan<- types.Event, outErrors chan<- error) {
+func streamMobyEvents(ctx context.Context, resp client.EventsResult, outEvents chan<- types.Event, outErrors chan<- error) {
 	defer close(outEvents)
 	defer close(outErrors)
 
@@ -120,7 +120,8 @@ func isSupportedEventAction(action events.Action) bool {
 		types.EventActionDestroy,
 		types.EventActionDie,
 		types.EventActionKill,
-		types.EventActionOOM:
+		types.EventActionOOM,
+		types.EventActionPull:
 		return true
 	default:
 		return false

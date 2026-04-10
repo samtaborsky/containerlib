@@ -5,6 +5,7 @@ package docker
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 
 	"github.com/moby/moby/api/types/container"
@@ -19,7 +20,7 @@ func (rt *runtime) ContainerStats(ctx context.Context, id string, opts *types.Co
 	}
 
 	outStats := make(chan types.ContainerStats)
-	outErrors := make(chan error)
+	outErrors := make(chan error, 1)
 
 	go decodeStatsResponse(ctx, resp.Body, outStats, outErrors)
 
@@ -64,7 +65,7 @@ func decodeStatsResponse(ctx context.Context, reader io.ReadCloser, outStats cha
 	defer func(reader io.ReadCloser) {
 		err := reader.Close()
 		if err != nil {
-			outErrors <- err
+			outErrors <- fmt.Errorf("%w: %w", types.ErrInternal, err)
 		}
 	}(reader)
 
@@ -96,6 +97,10 @@ func decodeStatsResponse(ctx context.Context, reader io.ReadCloser, outStats cha
 
 // fromMobyContainerStats transforms container.StatsResponse into types.ContainerStats.
 func fromMobyContainerStats(stats *container.StatsResponse) types.ContainerStats {
+	if stats == nil {
+		return types.ContainerStats{}
+	}
+
 	return types.ContainerStats{
 		ID:              stats.ID,
 		Name:            stats.Name,
@@ -156,5 +161,6 @@ func mapToMemoryStats(stats *container.StatsResponse) types.MemoryStats {
 	return types.MemoryStats{
 		UsedPercent: percentage,
 		UsedMb:      bytesToMegabytes(usage),
+		LimitMb:     bytesToMegabytes(limit),
 	}
 }
