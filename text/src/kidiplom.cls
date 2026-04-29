@@ -311,7 +311,7 @@
   \def\@langen{\@sklangen}
   \def\@textanot{\@textanotsk}
   \def\@textkeywords{\@textkeywordssk}
-  \def\@textaffirm{Odevzdan\'im tohto textu jeho autor/ka cestne vyhlasuje, \v ze cel\'u pr\'acu vr\'atane pr\'iloh vypracoval/a samostatne a za pou\v zitia iba zdrojov spom\'inan\'ych v~texte pr\'ace a uveden\'ych v zozname literat\'ury.
+  \def\@textaffirm{Odovzdan\'im tohto textu jeho autor \v cestne vyhlasuje, \v ze cel\'u pr\'acu vr\'atane pr\'iloh vypracoval samostatne a za pou\v zitia iba zdrojov spom\'inan\'ych v~texte pr\'ace a uveden\'ych v zozname literat\'ury.
 }
   \def\@textsubmitdate{d\'atum odovzdania pr\'ace}
   \def\@textsigniture{podpis autora}

@@ -1,7 +1,7 @@
 # containerlib
 
 `containerlib` is a Go library that provides abstraction from different container management runtimes.
-With one code, it is possible to work with containers running on different backends (for now, only Docker is supported).
+With one codebase, it is possible to work with containers running on different backends (for now, only Docker is supported).
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/samtaborsky/containerlib)](https://goreportcard.com/report/github.com/samtaborsky/containerlib)
 
@@ -33,7 +33,7 @@ Follow these steps to integrate `containerlib` into your project.
 
 ### Prerequisites
 
-*   Go 1.25+
+*   Go 1.26+
 *   A running container runtime (e.g., Docker)
 
 ### Installation
@@ -51,6 +51,59 @@ go get github.com/samtaborsky/containerlib
 Here is a quick example of how to use `containerlib` to create, inspect, and clean up an `nginx` container.
 
 ```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"log"
+
+	"github.com/samtaborsky/containerlib/docker"
+	"github.com/samtaborsky/containerlib/types"
+)
+
+func main() {
+	ctx := context.Background()
+
+	// 1. Initialize the runtime client (connects to default Docker daemon)
+	rt, err := docker.New("")
+	if err != nil {
+		log.Fatalf("Failed to connect to Docker: %v", err)
+	}
+	defer rt.Close()
+
+	// 2. Pull the nginx image
+	if err := rt.ImagePull(ctx, "nginx:latest", nil); err != nil {
+		log.Fatalf("Failed to pull image: %v", err)
+	}
+
+	// 3. Create the container
+	createRes, err := rt.ContainerCreate(ctx, &types.ContainerCreateConfig{
+		Image: "nginx:latest",
+	})
+	if err != nil {
+		log.Fatalf("Failed to create container: %v", err)
+	}
+	containerID := createRes.ID
+	fmt.Printf("Container created with ID: %s\n", containerID[:12])
+
+	// 4. Ensure cleanup (Force remove) runs when the function exits
+	defer rt.ContainerRemove(context.Background(), containerID, &types.ContainerRemoveOptions{Force: true})
+	
+
+	// 5. Start the container
+	if err := rt.ContainerStart(ctx, containerID, nil); err != nil {
+		log.Fatalf("Failed to start container: %v", err)
+	}
+
+	// 6. Inspect the running container
+	inspectRes, err := rt.ContainerStatus(ctx, containerID, nil)
+	if err != nil {
+		log.Fatalf("Failed to inspect container: %v", err)
+	}
+
+	fmt.Printf("Container is currently: %s\n", inspectRes.Status)
+}
 
 ```
 
@@ -64,7 +117,17 @@ TBD
 
 **Example:**
 ```go
+err := rt.ContainerStart(ctx, "non-existent-id", nil)
 
+if err != nil {
+    if errors.Is(err, types.ErrNotFound) {
+        log.Println("Provided container was not found.")
+    } else if errors.Is(err, types.ErrConflict) {
+        log.Println("Provided container has a state conflict.")
+    } else {
+        log.Printf("Unknown error: %v", err)
+    }
+}
 ```
 
 Types of errors include:

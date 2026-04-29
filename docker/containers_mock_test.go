@@ -656,7 +656,7 @@ func TestContainerWait(t *testing.T) {
 			waitCond: "not-running",
 			mockWaitResp: cont.WaitResponse{
 				StatusCode: 0,
-				Error:      &cont.WaitExitError{Message: "Wait exit error occured"},
+				Error:      &cont.WaitExitError{Message: "Wait exit error occurred"},
 			},
 			mockWaitErr:  nil,
 			expectedResp: types.ContainerWaitResult{ExitCode: 0},
