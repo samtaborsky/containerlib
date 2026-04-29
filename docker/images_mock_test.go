@@ -92,6 +92,7 @@ func TestImagePull(t *testing.T) {
 	tests := []struct {
 		name           string
 		imageRef       string
+		noOpts         bool
 		progressChan   chan types.ImagePullProgress
 		mockMsgs       []jsonstream.Message
 		mockErr        error
@@ -113,6 +114,16 @@ func TestImagePull(t *testing.T) {
 		{
 			name:           "Happy path - No progress",
 			imageRef:       "nginx:latest",
+			progressChan:   nil,
+			mockMsgs:       nil,
+			mockErr:        nil,
+			expectedEvents: 0,
+			expectedErr:    nil,
+		},
+		{
+			name:           "Happy path - Nil options",
+			imageRef:       "nginx:latest",
+			noOpts:         true,
 			progressChan:   nil,
 			mockMsgs:       nil,
 			mockErr:        nil,
@@ -155,6 +166,9 @@ func TestImagePull(t *testing.T) {
 			}
 
 			opts := &types.ImagePullOptions{Progress: tc.progressChan}
+			if tc.noOpts == true {
+				opts = nil
+			}
 
 			rt := &runtime{api: mockAPI}
 			err := rt.ImagePull(context.Background(), tc.imageRef, opts)
@@ -167,7 +181,7 @@ func TestImagePull(t *testing.T) {
 				t.Fatalf("expected no error, got %v", err)
 			}
 
-			if tc.progressChan != nil {
+			if tc.progressChan != nil && tc.noOpts == false {
 				count := 0
 				for range tc.progressChan {
 					count++

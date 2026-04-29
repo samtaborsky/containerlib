@@ -45,7 +45,12 @@ func (rt *runtime) ImagePull(ctx context.Context, name string, opts *types.Image
 	}
 	defer resp.Close()
 
-	return decodePullStream(ctx, resp, opts.Progress)
+	var progressChan chan<- types.ImagePullProgress
+	if opts != nil {
+		progressChan = opts.Progress
+	}
+
+	return decodePullStream(ctx, resp, progressChan)
 }
 
 func (rt *runtime) ImageInspect(ctx context.Context, id string, _ *types.ImageInspectOptions) (types.ImageInspectResult, error) {
