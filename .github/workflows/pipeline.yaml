@@ -1,0 +1,35 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Run Go Tests
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v6
+
+    - name: Set up Go
+      uses: actions/setup-go@v6
+      with:
+        go-version: '1.26'
+        check-latest: false
+
+    - name: Install dependencies
+      run: go mod download
+
+    - name: Run go vet
+      run: go vet ./...
+
+    - name: Run tests with coverage
+      run: go test -v -coverprofile=coverage.out ./...
+
+    - name: Print Coverage
+      run: go tool cover -func=coverage.out

@@ -2,4 +2,3 @@ bin/
 .idea
 *.log
 .DS_Store
-go.sum
