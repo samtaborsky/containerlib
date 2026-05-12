@@ -104,7 +104,7 @@
 \annotation[english]{This bachelor's thesis focuses on the design and implementation of a Go-based library for Docker container management. It outlines the fundamentals of containerization and Docker API access, with emphasis on a modular architecture enabling extensibility and support for multiple container runtimes. The practical part includes the implementation of the library and an accompanying demo application for container management, event monitoring, and resource tracking. The solution is validated by testing and provides a foundation for further development and open-source extension.}
 
 %% Klíčová slova práce, včetně anglických. Oddělená (obvykle) středníkem.
-\keywords{Docker; kontajnerizácia, knižnica; jazyk Go}
+\keywords{Docker; kontajnerizácia; knižnica; jazyk Go}
 \keywords[english]{Docker; containerization; library; Go language}
 
 %% Volitelná specifikace příloh textu práce, i anglicky. Výchozí je
@@ -173,40 +173,40 @@
 %   dokumentace stylu, vyjma přílohy~\ref{sec:ObsahData}, je rozpracovaná
 %   a (značně) neúplná verze!!!}
 
-\section{Úvod}
-V posledných rokoch sa kontajnerizácia stala základným stavebným kameňom vývoja a nasadzovania moderného softvéru. Na tomto koncepte je postavené veľké množstvo moderných produktov a nástrojov, od cloudových platforiem použiteľných pre nasadenie softvéru do produkčného prostredia, nástrojov na jednoduché zdieľanie kompletných vývojových prostredí medzi softvérovými inžiniermi a programátormi, až po škálovateľné systémy založené na architektúre mikroslužieb (microservice architecture). Väčšina súčasných webových aplikácií a webstránok už je nasadených v distribuovanom systéme postavenom z kontajnerov, čo prináša možnosť veľmi jednoduchého škálovania, vyrovnávania záťaže (load balancing), zálohovania a zaručenia vysokej dostupnosti. Prechod z tradičnej hardvérovej virtualizácie na kontajnerizáciu uľahčil a zefektívnil každú časť softvérového vývojového procesu, počínajúc reprodukovateľnými vývojovými prostrediami, cez integráciu CI/CD postupov do vývoja, až po nasadenie a správu v produkcii.
+\section{Úvod} \label{sec:uvod}
+V posledných rokoch sa kontajnerizácia stala základným stavebným kameňom vývoja a nasadzovania moderného softvéru. Na tomto koncepte je postavené veľké množstvo moderných produktov a nástrojov, od cloudových platforiem použiteľných pre nasadenie softvéru do produkčného prostredia, nástrojov na jednoduché zdieľanie kompletných vývojových prostredí medzi softvérovými inžiniermi a programátormi, až po škálovateľné systémy založené na architektúre mikroslužieb (\textit{microservice architecture}). Väčšina súčasných webových aplikácií a webstránok už je nasadených v distribuovanom systéme postavenom z kontajnerov, čo prináša možnosť veľmi jednoduchého škálovania, vyrovnávania záťaže (\textit{load balancing}), zálohovania a zaručenia vysokej dostupnosti. Prechod z tradičnej hardvérovej virtualizácie na kontajnerizáciu uľahčil a zefektívnil každú časť softvérového vývojového procesu, počínajúc reprodukovateľnými vývojovými prostrediami, cez integráciu \textit{Continuous Integration/Continuous Deployment} (ďalej len CI/CD) postupov do vývoja, až po nasadenie a správu v produkcii.
 
-Jedna z najznámejších technológií spojených s kontajnerizáciou je \textit{Docker}. Poskytuje komplexné rozhranie na správu životného cyklu kontajnerov a obrazov, ako aj na konfiguráciu sietí, pripájanie lokálnych zväzkov (volumes) a monitorovanie udalostí. Docker však nie je jediná technológia v tomto ekosystéme. Okrem neho existujú ďalšie nástroje s rôznymi architektúrami. Medzi ďalšie známe produkty a technológie patrí napríklad daemonless \textit{Podman}, distribuované orchestračné platformy ako \textit{Kubernetes}, alebo nízkoúrovňovým behovým prostredím \textit{containerd}. Táto rôznorodosť prístupov a abstrakčných vrstiev so sebou prináša komplexné prostredie, s ktorým sa súčasní vývojári musia vysporiadať.
+Jedna z najznámejších technológií spojených s kontajnerizáciou je \textit{Docker}. Poskytuje komplexné rozhranie na správu životného cyklu kontajnerov a obrazov, ako aj na konfiguráciu sietí, pripájanie lokálnych zväzkov a monitorovanie udalostí. Docker však nie je jediná technológia v tomto ekosystéme. Okrem neho existujú ďalšie nástroje s rôznymi architektúrami. Medzi niektoré známe produkty a technológie patrí napríklad daemonless \textit{Podman}, distribuované orchestračné platformy ako \textit{Kubernetes}, alebo nízkoúrovňové behové prostredie \textit{containerd}. Táto rôznorodosť prístupov a abstrakčných vrstiev so sebou prináša komplexné prostredie, s ktorým sa súčasní vývojári musia vysporiadať.
 
-\subsection{Motivácia a ciele práce}
-Pre lokálne vývojové prostredia vývojári často preferujú vysokoúrovňové riešenia (ako napríklad Docker), postavené na princípe jednoduchého používania a poskytujúce napríklad konzolové (CLI) alebo grafické rozhranie. V produkčnom prostredí a orchestrácii sú však uprednostňované nástroje oveľa nižšej úrovne, ako napríklad ľahký containerd.
+\subsection{Motivácia a ciele práce} \label{sec:motivacia}
+Pre lokálne vývojové prostredia vývojári často preferujú vysokoúrovňové riešenia (ako napríklad Docker), postavené na princípe jednoduchého používania a poskytujúce napríklad konzolové alebo grafické rozhranie. V produkčnom prostredí a pri orchestrácii sú však uprednostňované nástroje oveľa nižšej úrovne, ako napríklad ľahký containerd.
 
-Tento fakt prináša rôzne problémy: diametrálne odlišné rozhranie (API) a jeho zložitosť, spôsob práce, a nutnosť ovládať niekoľko nástrojov. Kým knižnica (SDK) pre Docker je postavená na jednoduchších synchrónnych akciách, containerd je omnoho modulárnejšie a vyžaduje od vývojára manuálnu správu niekoľkých komponentov (napr. snapshoty, namespaces, tasky a iné).
+Tento fakt prináša rôzne problémy: diametrálne odlišné rozhranie a jeho zložitosť, spôsob práce, a nutnosť ovládať niekoľko nástrojov. Kým knižnica pre Docker je postavená na jednoduchších akciách, containerd je omnoho modulárnejší a vyžaduje od vývojára manuálnu správu niekoľkých komponentov (napr. snapshoty, namespaces, tasky a iné).
 
-Zároveň vyvstáva problém tzv. \textit{Vendor lock-in}, čo v praxi znamená neprenositeľnosť aplikácie, postavenej napríklad na Docker SDK, na systémy, kde beží iba containerd alebo Kubernetes. Ak je žiadané podporovať oba druhy systémov, je nutné udržovať viaceré odlišné kusy kódu, čo prináša ďalšiu komplexnosť.
+Zároveň vyvstáva problém tzv. \textit{Vendor lock-in}, čo v praxi znamená neprenositeľnosť aplikácie, postavenej napríklad na Docker \textit{Software Development Kit} (ďalej len SDK), na systémy, kde beží iba containerd alebo Kubernetes. Ak je žiadané podporovať niekoľko druhov systémov, je nutné udržovať viaceré odlišné kusy kódu, čo prináša ďalšiu komplexnosť.
 
-Mojou motiváciou bolo vytvoriť jednoduché a elegantné unifikované rozhranie v jazyku Go, ktoré by vývojárom umožnilo použiť jeden kód na prácu s kontajnermi bez ohľadu na to, aký nástroj sa skrýva v pozadí. Cieľom tejto práce je analyzovať a porovnať existujúce riešenia na správu kontajnerov a ich architektúru. Na základe tejto analýzy navrhnúť jednotné rozhranie a abstrakčnú vrstvu, ktorá skryje implementačné rozdiely jednotlivých behových prostredí pred koncovým používateľom. Nasleduje naprogramovanie samotnej knižnice v jazyku Go, ktorá obsahuje modul pre prácu s nástrojom Docker, a zároveň jasný a jednoduchý spôsob, ako knižnicu rozšíriť o ďalšie kontajnerové behové prostredia. Nakoniec vytvorenú knižnicu otestovať a pripraviť ukážkový program demonštrujúci jej použitie.
+Mojou motiváciou bolo vytvoriť jednoduché a elegantné unifikované rozhranie v jazyku Go, ktoré by vývojárom umožnilo použiť jeden kód na prácu s kontajnermi bez ohľadu na to, aký nástroj sa skrýva v pozadí. Cieľom tejto práce je analyzovať a porovnať existujúce riešenia na správu kontajnerov a ich architektúru. Na základe tejto analýzy potom navrhnúť jednotné rozhranie a abstrakčnú vrstvu, ktorá skryje implementačné rozdiely jednotlivých behových prostredí pred koncovým používateľom. Nasleduje impementácia samotnej knižnice v jazyku Go, ktorá obsahuje modul pre prácu s nástrojom Docker, a zároveň jasný a jednoduchý spôsob, ako knižnicu rozšíriť o ďalšie kontajnerové behové prostredia. Nakoniec vytvorenú knižnicu otestovať a pripraviť ukážkový program demonštrujúci jej použitie.
 
-\subsection{Koncept riešenia}
-Základom knižnice je jednotné rozhranie obsahujúce funkcie na správu životného cyklu kontajnerov a obrazov, konfiguráciu sietí, pripájanie lokálnych zväzkov a monitorovanie a reakcie na rôzne udalosti. Z nástrojov Docker, Podman a containerd bola vybraná čo najširšia spoločná funkcionalita, ktorá tvorí toto rozhranie. Zároveň knižnica obsahuje jednoduché dátové typy a štruktúry, ktoré odtienia konkrétne implementačné detaily, vstupné a návratové typy a spôsoby predávania argumentov funkciám jednotlivých technológií. 
+\subsection{Koncept riešenia} \label{sec:koncept}
+Základom implementácie knižnice je jednotné rozhranie obsahujúce funkcie na správu životného cyklu kontajnerov a obrazov, konfiguráciu sietí, pripájanie lokálnych zväzkov a monitorovanie a reakcie na rôzne udalosti. Z nástrojov Docker, Podman a containerd bola vybraná čo najširšia spoločná funkcionalita, ktorá tvorí toto rozhranie. Zároveň knižnica obsahuje jednoduché dátové typy a štruktúry, ktoré odtienia konkrétne implementačné detaily, vstupné a návratové typy a spôsoby predávania argumentov funkciám jednotlivých technológií. 
 
-Vďaka tomu má vývojár dostupný nástroj, pomocou ktorého je možné implementovať aplikácie bez potreby písania kódu pre rôzne behové prostredia, pracovania s rozdielnymi dátovými typmi a spôsobmi riadenia toku programu. Takto implementovaná knižnica predstavuje základ pre jednoduchý, jednotný a rozšíriteľný systém, ktorý umožní nielen vývoj platformovo nezávislých aplikácií, ale napríklad aj ich testovanie. Vývojár má možnosť vytvárať a spravovať kontajnery so službami, ktoré sú potrebné počas behu testu, ako sú mimo iného databázové systémy alebo autentifikačné a logovacie nástroje.
+Vďaka tomu má vývojár dostupný nástroj, pomocou ktorého je možné implementovať aplikácie bez potreby písania kódu pre rôzne behové prostredia, pracovania s rozdielnymi dátovými typmi a spôsobmi riadenia toku programu. Takto implementovaná knižnica predstavuje základ pre jednoduchý, jednotný a rozšíriteľný systém, ktorý umožní nielen vývoj platformovo nezávislých aplikácií, ale napríklad aj ich jednoduché testovanie. Vývojár má možnosť vytvárať a spravovať kontajnery so službami, ktoré sú potrebné počas behu testu, ako sú mimo iného databázové systémy alebo autentifikačné a logovacie nástroje.
 
-\subsection{Prehľad existujúcich riešení}
-Momentálne najčastejší prístup, akým vývojári integrujú do svojho projektu kontajnerové behové prostredia, je pomocou využitia ich oficiálnych klientských knižníc (SDK). Pre Docker existuje  \textit{Moby SDK} \cite{moby}, pre Podman je dostupné  \textit{Podman SDK} \cite{podman-go} a pre containerd existuje oficiálna knižnica slúžiaca pre tvorcov iných nástrojov (napr. samotný Docker používa túto knižnicu) \cite{containerd-lib}. Tieto riešenia však neposkytujú žiadnu spoločnú abstrakciu, takže je nutné udržovať samostatný kód a vetvy logiky pre každé z nich.
+\subsection{Prehľad existujúcich riešení}  \label{sec:prehlad-rieseni}
+Najčastejší prístup, akým vývojári momentálne integrujú do svojich projektov kontajnerové behové prostredia, je pomocou využitia ich oficiálnych klientských knižníc. Pre Docker existuje  \textit{Moby SDK} \cite{moby}, pre Podman je dostupné  \textit{Podman SDK} \cite{podman-go} a pre containerd existuje oficiálna knižnica slúžiaca pre tvorcov iných nástrojov (napr. samotný Docker používa túto knižnicu) \cite{containerd-lib}. Tieto riešenia však neposkytujú žiadnu spoločnú abstrakciu, takže je nutné udržovať samostatný kód a vetvy logiky pre každé z nich.
 
-Kubernetes definoval pomocou gRPC protokolu spoločné rozhranie \textit{Kubernetes CRI (Container Runtime Interface)} \cite{kube-cri}. Toto rozhranie funguje na princípe klient-server. Na každom serveri (node) toto rozhranie používa agent  \textit{Kubelet}. Ten pomocou neho komunikuje s nízkoúrovňovým engine (napr.  containerd,  \textit{cri-o}, alebo v minulosti  \textit{dockershim}), ktorý toto rozhranie implementuje. CRI je síce extrémne robustné riešenie, ale je určené pre masívnu orchestráciu. To pre vývojára znamená implementáciu gRPC klienta a komunikáciu cez CRI, čo je pri písaní menších projektov, skriptovaní, automatizácii či vývoji CLI nástrojov príliš komplikované riešenie.
+Projekt Kubernetes definoval pomocou gRPC protokolu spoločné rozhranie \textit{Kubernetes Container Runtime Interface} (ďalej len CRI) \cite{kube-cri}. Toto rozhranie funguje na princípe klient-server. Na každom serveri (node) toto rozhranie používa agent  \textit{Kubelet}. Ten pomocou neho komunikuje s nízkoúrovňovým engine (napr.  containerd,  \textit{cri-o}, alebo v minulosti  \textit{dockershim}), ktorý toto rozhranie implementuje. CRI je síce extrémne robustné riešenie, ale je určené pre masívnu orchestráciu. To pre vývojára znamená implementáciu gRPC klienta a komunikáciu cez CRI, čo je pri písaní menších projektov, skriptovaní, automatizácii či vývoji \textit{Command-line Interface} (ďalej len CLI) nástrojov príliš komplikované riešenie.
 
-Ďalší populárny projekt v ekosystéme jazyka Go je  \textit{Testcontainers} \cite{testcontainers}. Táto knižnica umožňuje vývojárom priamo v jednotkových testoch (unit tests) programaticky naštartovať napr. databázu, spustiť testy a nakoniec kontajner zahodiť. Je však viazaná na kontext softvérového testovania. Obsahuje logiku pre čakanie na rôzne operácie (tzv.  \textit{waiting strategies}), automatické mazanie kontajnerov pomocou privilegovaného  \textit{Ryuk} kontajneru a iné nástroje mierené na testovanie softvéru. Nie je to všeobecná abstrakčná knižnica určená na produkčnú správu životného cyklu kontajnerov.
+Ďalší populárny projekt v ekosystéme jazyka Go je  \textit{Testcontainers} \cite{testcontainers}. Táto knižnica umožňuje vývojárom priamo v jednotkových testoch programaticky naštartovať napríklad databázu, spustiť testy a nakoniec kontajner zahodiť. Je však viazaná na kontext softvérového testovania. Obsahuje logiku pre čakanie na rôzne operácie (tzv.  \textit{waiting strategies}), automatické mazanie kontajnerov pomocou privilegovaného \textit{Ryuk} kontajneru a iné nástroje mierené na testovanie softvéru. Nie je to všeobecná abstrakčná knižnica určená na produkčnú správu životného cyklu kontajnerov.
 
-Podman poskytuje službu, ktorá emuluje Docker REST API (často na rovnakom sockete), čo umožňuje staršie nástroje napísané pre Docker používať s Podman. Toto však rieši problém fragmentácie rozhraní a dátových typov iba pre tieto dve kontajnerové behové prostredia, a to iba na úrovni operačného systému, nie v programovom kóde. Stále teda chýba nástroj, ktorým je možné jedným kódom ovládať napríklad Docker, Podman a containerd zároveň.
+Podman poskytuje službu, ktorá emuluje Docker \textit{Representational State Transfer Application Programming Interface} (ďalej len API), často na rovnakom sockete, čo umožňuje staršie nástroje napísané pre Docker používať s Podman. Toto však rieši problém fragmentácie rozhraní a dátových typov iba pre tieto dve kontajnerové behové prostredia, a to iba na úrovni operačného systému, nie v programovom kóde. Stále teda chýba nástroj, ktorým je možné jedným kódom ovládať napríklad Docker, Podman a containerd zároveň.
 
-Z prehľadu existujúcich riešení vyplýva, že hoci existujú snahy o štandardizáciu (ako napríklad gRPC rozhranie CRI v Kubernetes), tieto riešenia sú pre mnohé menšie a stredne veľké softvérové projekty príliš robustné a ťažkopádne. Na druhej strane, priame použitie natívnych SDK knižníc vedie k duplicite kódu a silnej závislosti na konkrétnom poskytovateľovi. V súčasnosti v ekosystéme jazyka Go absentuje ľahká, všeobecne použiteľná knižnica, ktorá by poskytla vývojárom jednotné rozhranie a abstrahovala by radikálne rozdiely medzi rozhraniami rôznych kontajnerových behových prostredí bez nutnosti implementácie robustných architektonických vzorov z prostredia Kubernetes.
+Z prehľadu existujúcich riešení vyplýva, že hoci existujú snahy o štandardizáciu (ako napríklad rozhranie CRI v Kubernetes), tieto riešenia sú pre mnohé menšie a stredne veľké softvérové projekty príliš robustné a ťažkopádne. Na druhej strane, priame použitie natívnych SDK knižníc vedie k duplicite kódu a silnej závislosti na konkrétnom poskytovateľovi. V súčasnosti v ekosystéme jazyka Go chýba ľahká, všeobecne použiteľná knižnica, ktorá by poskytla vývojárom jednotné rozhranie a abstrahovala by radikálne rozdiely medzi rozhraniami rôznych kontajnerových behových prostredí bez nutnosti implementácie robustných architektonických vzorov z prostredia Kubernetes.
 
-\subsection{Prínos a očakávania}
-Hlavným prínosom tejto práce je poskytnutie nástroja, ktorý odstráni závislosť aplikácií od jedného konkrétneho kontajnerového behového prostredia. Vývojári, ktorí túto knižnicu použijú, nebudú pevne zviazaný napríklad iba s Docker, ale budú mať v rukách spôsob, ako rovnaký kód použiť nezávisle na systéme, na ktorom bude ich aplikácia nasadená, prípadne nezávisle na rozhodnutí zmeniť prostredie, ktorý beží v pozadí. Práca prinesie čisté, unifikované API v jazyku Go. Vďaka abstrakcii konkrétnych implementačných detailov jednotlivých kontajnerových prostredí sa rapídne zníži čas potrebný na vývoj nástrojov pracujúcich s kontajnermi. Zároveň práca ponúka jednoduché riešenie pre vývojárov, pre ktorých je implementácia komplexného CRI (Container Runtime Interface) cez gRPC protokol zbytočne náročná a neprimeraná ich potrebám.
+\subsection{Prínos a očakávania}  \label{sec:prinos}
+Hlavným prínosom tejto práce je poskytnutie nástroja, ktorý odstráni závislosť aplikácií od jedného konkrétneho kontajnerového behového prostredia. Vývojári, ktorí túto knižnicu použijú, nebudú pevne zviazaní napríklad iba s Docker, ale budú mať dostupný spôsob, akým rovnaký kód použiť nezávisle na systéme, na ktorom bude ich aplikácia nasadená, prípadne nezávisle na rozhodnutí zmeniť prostredie, ktorý beží v pozadí. Práca prinesie čisté, unifikované API v jazyku Go. Vďaka abstrakcii konkrétnych implementačných detailov jednotlivých kontajnerových prostredí sa rapídne zníži čas potrebný na vývoj nástrojov pracujúcich s kontajnermi. Zároveň práca ponúka jednoduché riešenie pre vývojárov, pre ktorých je implementácia komplexného CRI (Container Runtime Interface) cez gRPC protokol zbytočne náročná a neprimeraná ich potrebám.
 
-Projekt obsahuje centrálny balíček obsahujúci unifikované rozhranie pre operácie nad kontajnermi a obrazmi, a zároveň dátový model štruktúr, ktoré toto rozhranie využíva. Taktiež obsahuje aspoň jeden balíček pre Docker, použiteľný na komunikáciu s Docker API.
+Projekt obsahuje centrálny balíček obsahujúci unifikované rozhranie pre operácie nad kontajnermi a obrazmi, a zároveň model štruktúr, ktoré toto rozhranie využíva. Taktiež obsahuje balíček pre Docker na komunikáciu s Docker API.
 
 %%%  Po přeložení programem CSLaTeX (třikrát) je potřeba použít
 %%%  program DVIPS a takto získaný PostScriptový soubor vytisknout
@@ -215,59 +215,67 @@ Projekt obsahuje centrálny balíček obsahujúci unifikované rozhranie pre ope
 %%%  Rovněž je možné použít program DVIPDFM a vytvořit z dokumentu
 %%%  soubor ve formátu PDF včetně hypertextových odkazů.
 
-\section{Teoretické základy}
-\subsection{Virtualizácia a kontajnerizácia}
-S pokrokmi v softvérovom inžinierstve sa základnou výzvou stalo zabezpečenie spoľahlivého a konzistentného nasadenia aplikácií v rôznych výpočtových prostrediach. Historickým pokrokom v tomto ohľade bola virtualizácia prostredníctvom virtuálnych strojov (VM). Toto riešenie je postavené na softvérovej vrstve zvanej hypervízor, ktorý emuluje hardvér stroja. Na takto emulovanom hardvéri je spustený kompletný operačný systém úplne izolovaný od hostiteľského operačného systému a iných virtuálnych strojov. Výhoda tohoto prístupu je vysoká úroveň bezpečnosti. Medzi nevýhody však patrí značná systémová réžia, keďže každý virtuálny stroj spotrebuje zdroje potrebné na beh operačného systému.
-
-Kontajnerizácia je modernejší a efektívnejší prístup k izolácii aplikácií. Všetky kontajnery spustené na hostiteľskom operačnom systéme zdieľajú jeho jadro a sami neobsahujú vlastný operačný systém, ale iba samotnú aplikáciu a jej nevyhnutné závislosti. Tento model prináša značné zníženie nárokov na systémové zdroje, rýchlejšie spúšťanie kontajnerov a väčšie množstvo kontajnerov spustených na jednom fyzickom serveri. Technologický základ kontajnerizácie je postavený na dvoch funkciách jadra: \textit{menné priestory (namespaces)} a \textit{kontrolné skupiny (cgroups)}. Menné priestory zabezpečujú izoláciu - každý kontajner má svoj vlastný, oddelený pohľad na systémové zdroje. Kontrolné skupiny naopak slúžia na riadenie a obmedzovanie systémových zdrojov, ktoré môže kontajner využívať.
+\section{Teoretické základy}  \label{sec:teoria}
+Táto kapitola poskytuje nevyhnutný teoretický rámec pre pochopenie rozdielov medzi tradičnou virtualizáciou a modernou kontajnerizáciou, pričom sa detailne zameriava na architektúru platformy Docker. Zároveň analyzuje špecifiká programovacieho jazyka Go a princípy návrhu softvérových architektúr, ktoré sú kľúčové pre zabezpečenie vysokej rozšíriteľnosti a modularity výslednej knižnice.
 
 
 
-\subsection{Docker a jeho architektúra}
-Docker je platforma s otvoreným zdrojovým kódom ktorá abstrahuje tieto implementačné detaily a poskytuje ucelený ekosystém nástrojov na automatizáciu, nasadzovanie, spúšťanie a správu aplikácií bežiacich v kontajneroch. Vďaka svojej robustnosti a jednoduchosti sa postupne stal štandardom v oblasti kontajnerizácie a posunu k microservice nasadeniam.
+\subsection{Virtualizácia a kontajnerizácia}  \label{sec:virtualizacia}
+S pokrokmi v softvérovom inžinierstve sa základnou výzvou stalo zabezpečenie spoľahlivého a konzistentného nasadenia aplikácií v rôznych výpočtových prostrediach. Historickým pokrokom v tomto ohľade bola virtualizácia prostredníctvom virtuálnych strojov (\textit{VM - Virtual Machines}). Toto riešenie je postavené na softvérovej vrstve zvanej hypervízor, ktorý emuluje hardvér stroja. Na takto emulovanom hardvéri je spustený kompletný operačný systém úplne izolovaný od hostiteľského operačného systému a iných virtuálnych strojov. Výhoda tohoto prístupu je vysoká úroveň bezpečnosti. Medzi nevýhody však patrí značná systémová réžia, keďže každý virtuálny stroj spotrebuje zdroje potrebné na beh operačného systému.
 
-Jadro platformy Docker je postavené na architektúre \textit{klient-server}. Tá sa skladá z troch základných častí: perzistentný proces Docker ({\texttt{dockerd}), rozhranie \textit{REST API} a Docker klient (\textit{docker}) \cite{docker-overview}. Perzistentný proces beží v pozadí na hostiteľskéhom systéme a je zodpovedný za všetky kľúčové operácie. Svoje funkcie vystavuje pomocou REST API rozhrania, ktoré štandardne počúva na unixovom sokete. Slúži ako centrálny komunikačný bod pre akéhokoľvek klienta, ktorý chce interagovať s procesom \texttt{dockerd}. Docker CLI je konzolový nástroj slúžiaci ako primárne rozhranie pre používateľa. Každý užívateľský príkaz preloží na HTTP požiadavok, odošle ho na Docker API, odkiaľ bude následne vykonaný.
+Kontajnerizácia je modernejší a efektívnejší prístup k izolácii aplikácií. Všetky kontajnery spustené na hostiteľskom operačnom systéme zdieľajú jeho jadro a sami neobsahujú vlastný operačný systém, ale iba samotnú aplikáciu a jej nevyhnutné závislosti. Tento model prináša značné zníženie nárokov na systémové zdroje, rýchlejšie spúšťanie kontajnerov a väčšie množstvo kontajnerov spustených na jednom fyzickom serveri. Technologický základ kontajnerizácie v Linuxe je postavený na dvoch funkciách jadra: \textit{menné priestory (namespaces)} a \textit{kontrolné skupiny (cgroups)}. Menné priestory zabezpečujú izoláciu - každý kontajner má svoj vlastný, oddelený pohľad na systémové zdroje. Kontrolné skupiny naopak slúžia na riadenie a obmedzovanie systémových zdrojov, ktoré môže kontajner využívať.
+
+
+
+\subsection{Docker a jeho architektúra}  \label{sec:docker-arch}
+Docker je platforma s otvoreným zdrojovým kódom, ktorá abstrahuje tieto implementačné detaily a poskytuje ucelený ekosystém nástrojov na automatizáciu, nasadzovanie, spúšťanie a správu aplikácií bežiacich v kontajneroch. Vďaka svojej robustnosti a jednoduchosti sa postupne stal štandardom v oblasti kontajnerizácie a posunu k nasadeniam mikroslužieb.
+
+Jadro platformy Docker je postavené na architektúre klient-server. Tá sa skladá z troch základných častí: perzistentný proces Docker ({\texttt{dockerd}), rozhranie \textit{REST API} a Docker klient (\textit{docker}) \cite{docker-overview}. Perzistentný proces beží v pozadí na hostiteľskéhom systéme a je zodpovedný za všetky kľúčové operácie. Svoje funkcie vystavuje pomocou REST API rozhrania, ktoré štandardne počúva na unixovom sokete. Slúži ako centrálny komunikačný bod pre akéhokoľvek klienta, ktorý chce interagovať s procesom \texttt{dockerd}. Docker CLI je konzolový nástroj slúžiaci ako primárne rozhranie pre používateľa. Každý užívateľský príkaz preloží na \textit{Hypertext Transfer Protocol} (ďalej len HTTP) požiadavok, odošle ho na Docker API, odkiaľ bude následne spracovaná a vykonaný.
 
 Okrem týchto komponentov sú pre prácu s Docker kľúčové tieto objekty:
 \begin{itemize}
     \item \textbf{Obraz (Image):} Šablóna s inštrukciami na vytvorenie kontajneru. \cite{docker-container}
     \item \textbf{Kontajner (Container):} Spustiteľná inštancia obrazu. \cite{docker-image}
-    \item \textbf{Register (Registry):} Úložisko pre Docker obrazy, ako napríklad Docker Hub. \cite{docker-registry}
+    \item \textbf{Register (Registry):} Vzdialené alebo lokálne úložisko pre Docker obrazy, ako napríklad Docker Hub. \cite{docker-registry}
 \end{itemize}
 
 Praktický výstup tejto práce sa do tejto architektúry začleňuje ako programatický klient. Používateľovi umožňuje komunikovať s platformou Docker pomocou kódu aplikácie napísanej v jazyku Go a obísť tak integráciu s príkazovým riadkom.
 
 
 
-\subsection{Programovací jazyk Go a jeho ekosystém}
-Voľba programovacieho jazyku \textit{Go} ako technologického základu pre túto prácu nebola náhodná. Go, jazyk vyvinutý spoločnosťou Google, bol navrhnutý s dôrazom na jednoduchosť, efektivitu a spoľahlivosť pri vývoji komplexných aplikácií, vďaka čomu dosiahol dominantnú rolu v oblasti \textit{cloud-native} softvéru. Samotný Docker, ale aj Kubernetes a ďalšie nástroje v tomto ekosystéme sú napísané práve v Go. Ako kompilovaný a staticky typovaný jazyk poskytuje typovú bežpečnosť a vysoký výkon, zatiaľ čo kompilácia do jedného binárneho súboru bez externých závislostí značne zjednodušuje nasadenie a distribúciu aplikácií v Go.
+\subsection{Programovací jazyk Go a jeho ekosystém}  \label{sec:jazyk-go}
+Voľba programovacieho jazyku \textit{Go} ako technologického základu pre túto prácu nebola náhodná. Go, jazyk vyvinutý spoločnosťou Google, bol navrhnutý s dôrazom na jednoduchosť, efektivitu a spoľahlivosť pri vývoji komplexných aplikácií, vďaka čomu dosiahol dominantnú rolu v oblasti \textit{cloud-native} softvéru. Samotný Docker, ale aj Kubernetes a ďalšie nástroje v tomto ekosystéme sú napísané práve v Go. Ako kompilovaný a staticky typovaný jazyk poskytuje typovú bezpečnosť a vysoký výkon, zatiaľ čo kompilácia do jedného binárneho súboru bez externých závislostí značne zjednodušuje nasadenie a distribúciu aplikácií v Go.
 
-Významnou prednosťou Go v kontexte tejto práce je jeho zabudovaný model súbežnosti (\textit{concurrency}) založený na dvoch kľučových konceptoch \cite{go-concurrency}:
+Významnou prednosťou Go v kontexte tejto práce je jeho zabudovaný model súbežnosti \textit{Communicating Sequential Processes (CSP)} \cite{hoare-csp} založený na dvoch kľučových konceptoch \cite{go-concurrency}:
 \begin{itemize}
-    \item \textbf{Goroutines (gorutiny):} Ľahké vlákna spravované priamo behovým prostredím jazyka Go, nie operačným systémom. Ich vytváranie a správa má malú réžiu, vďaka čomu je možný beh veľkého množstva takýchto vlákien v jednej aplikácii.
-    \item \textbf{Channels (kanály):} Typovo bezpečný komunikačný mechanizmus, pomocou ktorého si gorutiny môžu bezpečne a synchrónne posielať dáta. Tento prístup predchádza problémom so súbehom (\textit{race conditions}) a uľahčuje návrh asynchrónnych operácií.
+    \item \textbf{Goroutines (gorutiny):} Ľahké vlákna spravované priamo behovým prostredím jazyka Go, nie operačným systémom. Ich vytváranie a správa majú malú réžiu, vďaka čomu je možný beh veľkého množstva takýchto vlákien v jednej aplikácii.
+    \item \textbf{Channels (kanály):} Typovo bezpečný komunikačný mechanizmus, pomocou ktorého si gorutiny môžu bezpečne a synchrónne posielať dáta. Tento prístup pomáha predchádzať problémom so súbehom (\textit{race conditions}) a uľahčuje návrh asynchrónnych operácií.
 \end{itemize}
 
-Praktická časť mojej práce tieto vlastnosti využíva pri implementácii funkcií spravujúcich dátové prúdy z Docker API. Monitorovanie prostriedkov využitých kontajnerom alebo odpočúvanie systémových udalostí na pozadí spúšťajú dedikovanú gorutinu, ktorá nepretržite dekóduje a spracúva dáta prichádzajúce z Docker. Vďaka tomu môže používateľ pohodlne prijímať telemetriu a systémové udalosti v reálnom čase bez toho, aby došlo k zablokovaniu hlavného vlákna aplikácie.
+Praktická časť mojej práce tieto vlastnosti využíva pri implementácii funkcií spravujúcich dátové prúdy z Docker API. Monitorovanie prostriedkov využitých kontajnerom alebo odpočúvanie systémových udalostí na pozadí spúšťajú dedikovanú gorutinu, ktorá nepretržite dekóduje a spracúva dáta prichádzajúce z Docker API. Vďaka tomu môže používateľ pohodlne prijímať telemetriu a systémové udalosti v reálnom čase bez toho, aby došlo k zablokovaniu hlavného vlákna aplikácie.
 
 
 
-\subsection{Softvérové architektúry a rozšíriteľnosť knižníc}
+\subsection{Softvérové architektúry a rozšíriteľnosť knižníc}  \label{sec:soft-architektury}
 Kvalita softvéru sa neodvíja iba od jeho funkčnosti, ale aj od jeho vnútorného návrhu. Správna architektúra zaručuje ľahkú použiteľnosť, jednoduchosť testovania a rozšíriteľnosť o novú funkcionalitu bez nutnosti prepisovania kódu.
 
-Základným kameňom návrhu praktickej časti je programovanie voči rozhraniam (\textit{interface-driven design}) a úzko súvisiaci princíp inverzie závislostí (\textit{Dependency Inversion Principle}), piaty z princípov SOLID \cite{clean-architecture}. Hlavnou myšlienkou je znížiť pevnú väzbu medzi modulmi a urobiť systém flexibilnejším a rozšíriteľnejším. To je postavené na kvalitnom návrhu abstrakcií, od ktorých sú moduly závislé. Týmito abstrakciami sú v jazyku Go práve rozhrania. Výsledkom takéhoto návrhu je voľná väzba (\textit{loose coupling}) medzi komponentami, kde zmena implementačných detailov jednej komponenty neovplyvní ostatné moduly, pokiaľ sú dodržané kontrakty definované rozhraním. To dramaticky zvyšuje flexibilitu a zjednodušuje testovanie, pretože pri jednotkových testoch je možné konkrétnu implementáciu API jednoducho nahradiť za falošnú (\textit{mock}) a testovať tak komponent v úplnej izolácii od behového prostredia.
+Základným kameňom návrhu praktickej časti je programovanie voči rozhraniam (\textit{interface-driven design}) a úzko súvisiaci princíp inverzie závislostí (\textit{Dependency Inversion Principle}), piaty z princípov SOLID \cite{clean-architecture}. Hlavnou myšlienkou je znížiť pevnú väzbu medzi modulmi a urobiť systém flexibilnejším a rozšíriteľnejším. To je postavené na kvalitnom návrhu abstrakcií, od ktorých sú moduly závislé. Týmito abstrakciami sú v jazyku Go práve rozhrania. Výsledkom takéhoto návrhu je voľná väzba (\textit{loose coupling}) medzi komponentami, kde zmena implementačných detailov jednej komponenty neovplyvní ostatné moduly, pokiaľ sú dodržané kontrakty definované rozhraním. To dramaticky zvyšuje flexibilitu a zjednodušuje testovanie, pretože pri jednotkových testoch je možné konkrétnu implementáciu API jednoducho nahradiť za falošnú (\textit{mock}) a testovať tak komponentu v úplnej izolácii od behového prostredia.
 
-Ďalším často využívaným architektonickým prvkom je návrhový vzor Adaptér (\textit{Adapter}). Úlohou tohoto vzorou je obaliť existujúci, často zložitý alebo nekompatibilný systém a poskytnúť preň zjednodušené, čistejšie a účelovo zamerané API. Návrhový vzor Fasáda (\textit{Facade}) potom skrýva vnútornú komplexnosť subsystému a vystavuje iba tie funkcie, ktoré sú pre klienta relevantné, čím znižuje kognitívnu záťaž vývojára a zabraňuje chybám plynúcim z nesprávneho použitia zložitého rozhrania. Aplikácia týchto princípov je základom pre tvorbu robustných a dlhodobo udržateľných softvérových knižníc.
-
-
-
-\section{Analýza problému}
-\subsection{Požiadavky na systém}
-Cieľom tejto bakalárskej práce je návrh a implementácia softvérovej knižnice v jazyku Go, ktorá poskytne vysokoúrovňové, jednoducho použiteľné a rozšíriteľné rozhranie pre programovú správu životného cyklu kontajnerov. Navrhovaná knižnica má za cieľ skryť komplexnosť a nízku úroveň abstrakcie existujúcich oficiálnych SDK a poskytnúť rozhranie, ktoré je intuitívne, typovo bezpečné a zamerané na najčastejšie prípady použitia. Na základe tejto analýzy boli definované nasledujúce funkčné a nefunkčné požiadavky na systém.
+Ďalším často využívaným architektonickým prvkom je návrhový vzor Adaptér (\textit{Adapter}). Úlohou tohoto vzorou je obaliť existujúci, často zložitý alebo nekompatibilný systém a poskytnúť preň zjednodušené, čistejšie a účelovo zamerané API. Návrhový vzor Fasáda (\textit{Facade}) potom skrýva vnútornú komplexnosť subsystému a vystavuje iba tie funkcie, ktoré sú pre klienta relevantné, čím znižuje kognitívnu záťaž vývojára a zabraňuje chybám plynúcim z nesprávneho použitia zložitého rozhrania. Aplikácia týchto princípov je základom pre tvorbu robustných a dlhodobo udržateľných softvérových riešení.
 
 
 
-\subsubsection{Funkčné požiadavky}
+\section{Analýza problému}  \label{sec:analyza}
+V tejto časti sa zameriavam na hĺbkovú analýzu špecifikácií potrebných pre úspešnú implementáciu knižnice, pričom definujem kľúčové funkčné a nefunkčné požiadavky na systém. Súčasťou je aj kritický prehľad existujúcich technologických riešení, ktoré tvoria základ pre komunikáciu s behovým prostredím a zabezpečujú budúcu rozšíriteľnosť riešenia v rámci ekosystému Go.
+
+
+
+\subsection{Požiadavky na systém}  \label{sec:poziadavky}
+Cieľom tejto bakalárskej práce je návrh a implementácia softvérovej knižnice v jazyku Go, ktorá poskytne vysokoúrovňové, jednoducho použiteľné a rozšíriteľné rozhranie pre programovú správu životného cyklu kontajnerov. Navrhovaná knižnica má za cieľ skryť komplexnosť a nízku úroveň abstrakcie existujúcich oficiálnych SDK a poskytnúť rozhranie, ktoré je intuitívne, typovo bezpečné a zamerané na najčastejšie prípady použitia. Na základe analýzy zadania boli definované nasledujúce funkčné a nefunkčné požiadavky na systém.
+
+
+
+\subsubsection{Funkčné požiadavky}  \label{sec:funkcne-poziadavky}
 Funkčné požiadavky definujú, aké konkrétne operácie musí systém umožňovať. Boli rozdelené do logických celkov podľa spravovaného typu zdrojov.
 
 \begin{itemize}
@@ -276,9 +284,9 @@ Funkčné požiadavky definujú, aké konkrétne operácie musí systém umožň
         \item Systém musí umožniť vytvorenie, spustenie, zastavenie, pozastavenie, obnovenie, reštartovanie a odstránenie kontajnerov.
         \item Musí poskytovať funkciu na výpis existujúcich kontajnerov s možnosťou filtrovania.
         \item Musí umožniť inšpekciu konkrétneho kontajnera a získať jeho detailný stav.
-        \item Musí podporovať spustenie príkazov vo vnútri bežiaceho kontajnera.
+        \item Musí podporovať spustenie príkazov vo vnútri bežiaceho kontajneru.
         \item Musí implementovať mechanizmus na čakanie, kým kontajner nedosiahne určitý stav.
-        \item Musí umožniť streamovanie logov z kontajnera v reálnom čase.
+        \item Musí umožniť streamovanie logov z kontajneru v reálnom čase.
     \end{itemize}
 
     \item \textbf{Správa obrazov:}
@@ -298,68 +306,79 @@ Funkčné požiadavky definujú, aké konkrétne operácie musí systém umožň
 
 
 
-\subsubsection{Nefunkčné požiadavky}
+\subsubsection{Nefunkčné požiadavky}  \label{sec:nefunkcne-poziadavky}
 Nefunkčné požiadavky definujú kvalitatívne vlastnosti a architektonické ciele systému.
 
 \begin{itemize}
     \item \textbf{Jednoduchosť a abstrakcia:} Rozhranie knižnice musí byť výrazne jednoduchšie na použitie ako natívne SDK.
     \item \textbf{Rozšíriteľnosť:} Architektúra musí byť navrhnutá tak, aby bolo v budúcnosti možné pridať podporu pre alternatívne behové prostredia.
-    \item \textbf{Testovateľnosť:} Návrh systému musí umožňovať jednoduché písanie jednotkových (unit) testov.
+    \item \textbf{Testovateľnosť:} Návrh systému musí umožňovať jednoduché písanie jednotkových testov.
     \item \textbf{Spracovanie chýb:} Knižnica musí mapovať širokú a často nekonzistentnú škálu chýb z nízkoúrovňového SDK na jasne definovanú sadu sémantických chýb.
 \end{itemize}
 
 
 
-\subsection{Prehľad dostupných knižníc a nástrojov}
+\subsection{Prehľad dostupných knižníc a nástrojov}  \label{sec:prehlad-kniznic}
+Efektívna interakcia s Docker vyžaduje voľbu medzi priamou komunikáciou s REST API a využitím vysokoúrovňových abstrakcií, ktoré ponúka oficiálne SDK.
+
+
 \subsubsection{Komunikácia s Docker Engine: REST API a SDK}
-Docker Engine, ako bolo popísané v kapitole 2.2, funguje na princípe klient-server. Na komunikáciu s ním existujú dva základné prístupy: priame volanie REST API alebo použitie oficiálneho SDK (\textit{Software Development Kit}).
+Docker Engine, ako bolo popísané v kapitole \ref{sec:docker-arch}, funguje na princípe klient-server. Na komunikáciu s ním existujú dva základné prístupy: priame volanie REST API alebo použitie oficiálneho SDK.
 
 \begin{itemize}
-    \item \textbf{REST API:} Predstavuje základné, jazykovo-agnostické rozhranie pre Docker \cite{docker-api}. Akákoľvek komunikácia, ako napríklad vytvorenie kontajneru alebo stiahnutie obrazu, je v skutočnosti HTTP požiadavok na konkrétny koncový bod (napríklad \texttt{POST /containers/create}). Priamy prístup cez REST API by si vyžadoval manuálnu tvorbu HTTP požiadavkov, serializáciu dát do formátu JSON, spracovanie HTTP odpovedí a komplexné mapovanie chybových stavov. Tento prístup je síce univerzálny, ale pre vývoj aplikácií je zbytočne zložitý a náchylný na chyby.
-    \item \textbf{SDK (Software Development Kit):} Je vysokoúrovňová a jazykovo špecifická knižnica, ktorá obaľuje REST API do natívnych funkcií a dátových štruktúr daného programovacieho jazyka \cite{docker-go-sdk}. Pre vývojára to znamená, že namiesto manuálneho skladania HTTP požiadaviek volá bežné funkcie, pracuje s typovo bezpečnými objektmi a získava štandardné chybové typy. SDK sa stará o všetku nízkoúrovňovú komunikáciu, autentifikáciu a spracovanie dátových prúdov, čo značne zjednodušuje vývoj a zvyšuje robustnosť výslednej aplikácie.
+    \item \textbf{REST API:} Predstavuje základné, jazykovo-agnostické rozhranie pre Docker \cite{docker-api}. Akákoľvek komunikácia, ako napríklad vytvorenie kontajneru alebo stiahnutie obrazu, je v skutočnosti HTTP požiadavok na konkrétny koncový bod (napríklad \texttt{POST /containers/create}). Priamy prístup cez REST API by si vyžadoval manuálnu tvorbu HTTP požiadavkov, serializáciu dát do formátu \textit{JavaScript Object Notation} (ďalej len JSON), spracovanie HTTP odpovedí a komplexné mapovanie chybových stavov. Tento prístup je síce univerzálny, ale pre potreby tejto bakalárskej práce je nadmerne zložitý a náchylný na chyby, pričom jeho použitie neprináša nijaké značné výhody.
+    \item \textbf{SDK:} Je vysokoúrovňová a jazykovo špecifická knižnica, ktorá obaľuje REST API do natívnych funkcií a dátových štruktúr daného programovacieho jazyka, v tomto prípade Go \cite{docker-go-sdk}. Pre vývojára to znamená, že namiesto manuálneho skladania HTTP požiadaviek volá bežné funkcie, pracuje s typovo bezpečnými objektmi a získava štandardné chybové typy. SDK sa stará o všetku nízkoúrovňovú komunikáciu, autentifikáciu a spracovanie dátových prúdov, čo značne zjednodušuje vývoj a zvyšuje robustnosť výslednej aplikácie.
 \end{itemize}
 
 Pre implementáciu knižnice v tejto práci bol zvolený prístup s využitím oficiálneho Go SDK pre Docker, keďže poskytuje najvyššiu mieru stability a abstrakcie.
 
 
 
-\subsubsection{Použité knižnice a technológie}
-\paragraph{Moby Project a oficiálne Go SDK}
-Moby je otvorený softvérový projekt a sada komponentov, z ktorých je zložený samotný Docker. Súčasťou tohto projektu je aj oficiálna klientska knižnica pre jazyk Go. Táto knižnica je štandardom pre akúkoľvek Go aplikáciu, ktorá potrebuje komunikovať s Docker prostredím. Knižnica využíva práve toto SDK ako základ pre všetky operácie spojené so správou kontajnerov, obrazov a ďalších zdrojov. Tým je zabezpečené, že komunikácia s Docker API je spoľahlivá a konzistentná s oficiálnymi nástrojmi.
+\subsubsection{Použité knižnice a technológie}  \label{sec:pouzite-technologie}
+Výber vhodných technológií je ovplyvnený snahou o maximálnu kompatibilitu s priemyselnými štandardmi a stabilitu výsledného rozhrania. Nasledujúce nástroje predstavujú pevný základ pre efektívnu a modernú implementáciu zadania práce.
 
 
 
-\paragraph{Nástroje pre budúcu rozšíriteľnosť}
+\paragraph{Moby Project a oficiálne Go SDK}  \label{par:moby-sdk}
+Moby je otvorený softvérový projekt a sada komponentov, z ktorých je zložený samotný Docker. Súčasťou tohto projektu je aj oficiálna klientska knižnica pre jazyk Go. Táto knižnica je štandardom pre akúkoľvek Go aplikáciu, ktorá potrebuje komunikovať s Docker prostredím. Knižnica práve toto SDK využíva ako základ pre všetky operácie spojené so správou kontajnerov, obrazov a ďalších zdrojov. Tým je zabezpečené, že komunikácia s Docker API je spoľahlivá a konzistentná s oficiálnymi nástrojmi.
+
+
+
+\paragraph{Nástroje pre budúcu rozšíriteľnosť}  \label{sec:buduce-nastroje}
 Architektúra knižnice implementovanej v tejto práci, založená na striktnom oddelení rozhraní od implementácie, bola od začiatku navrhnutá s ohľadom na budúcu rozšíriteľnosť o podporu alternatívnych behových prostredí. Pre takéto rozšírenie by bolo možné využiť nasledujúce nástroje:
 \begin{itemize}
-    \item \textbf{Podman:} Je populárne behové prostredie, ktoré poskytuje REST API kompatibilné s Docker API. Pre základnú podporu by teda bolo možné prispôsobiť existujúcu implementáciu pre Docker. Pre plnohodnotnú integráciu existuje špecializovaná Go knižnica, ktoré umožňujú priamu komunikáciu s Podmanom.
+    \item \textbf{Podman:} Je populárne behové prostredie, ktoré poskytuje REST API kompatibilné s Docker API. Pre základnú podporu by teda bolo možné prispôsobiť existujúcu implementáciu pre Docker. Pre plnohodnotnú integráciu existuje špecializovaná Go knižnica, ktorá umožňuje priamu komunikáciu s Podmanom.
     \item \textbf{containerd:} Je nízkoúrovňové behové prostredie, ktoré tvorí jadro samotného Dockeru, ale môže byť použité aj samostatne. Projekt \texttt{containerd} poskytuje vlastnú klientsku Go knižnicu, pomocou ktorej by bolo možné vytvoriť novú implementáciu rozhraní definovaných v balíčku \texttt{types}.
  \end{itemize}
 
 
 
-\paragraph{Pomocné knižnice ekosystému Go}
+\paragraph{Pomocné knižnice ekosystému Go}  \label{sec:pomocne-kniznice}
 Okrem hlavného Moby SDK boli pri vývoji využité aj ďalšie špecializované knižnice, ktoré riešia špecifické implementačné detaily a prispievajú k čistote a robustnosti kódu:
 \begin{itemize}
-    \item \textbf{\texttt{github.com/distribution/reference:}} Táto knižnica sa špecializuje na čítanie a normalizáciu názvov a referencií Docker obrazov \cite{dist-reference}. Zabezpečuje, že názov obrazu je správne rozložený na jeho komponenty (názov, tag, adresa registra), čo je kľúčové pre správne sťahovanie obrazov a autentifikáciu.
-    \item \textbf{\texttt{github.com/containerd/errdefs:}} Knižnica poskytujúca štandardizovanú sadu typov chýb pre kontajnerové operácie (napr. \texttt{NotFound}, \texttt{Conflict}) \cite{errdefs}. Jej použitím sa zabezpečuje konzistentné a sémanticky správne mapovanie nízkoúrovňových chýb z Docker API na chyby definované v balíčku \texttt{types}.
+    \item \textbf{\texttt{github.com/distribution/reference:}} Táto knižnica sa špecializuje na čítanie a normalizáciu názvov a referencií obrazov \cite{dist-reference}. Zabezpečuje, že názov obrazu je správne rozložený na jeho komponenty (názov, tag, adresa registra), čo je kľúčové pre správne sťahovanie obrazov a autentifikáciu.
+    \item \textbf{\texttt{github.com/containerd/errdefs:}} Knižnica poskytujúca štandardizovanú sadu typov chýb pre kontajnerové operácie (napr. \texttt{NotFound}, \texttt{Conflict}), ako aj funkcie na ich identifikáciu a spracovanie \cite{errdefs}. Jej použitím sa zabezpečuje konzistentné a sémanticky správne mapovanie nízkoúrovňových chýb z Docker API na chyby definované v balíčku \texttt{types}.
 \end{itemize}
 
 
 
-\section{Návrh a implementácia riešenia}
-\subsection{Návrh architektúry knižnice}
-Architektúra knižnice bola navrhnutá s dôrazom na splnenie kľúčových nefunkčných požiadaviek definovaných v kapitole 3.1: jednoduchosť, rozšíriteľnosť a testovateľnosť. Tieto ciele sú dosiahnuté aplikáciou osvedčených architektonických princípov, predovšetkým princípu inverzie závislostí, ktorý bol teoreticky popísaný v kapitole 2.4. Základným kameňom celého návrhu je preto striktné oddelenie abstraktnej vrstvy (verejného API) od jej konkrétnej implementácie.
+\section{Návrh a implementácia riešenia}  \label{sec:navrh-implementacia}
+Prechod od teoretických poznatkov k praktickej realizácii vyžaduje jasnú definíciu štruktúry, ktorá zjednotí ovládanie rôznych behových prostredí pod jedno intuitívne rozhranie. Táto časť detailne rozoberá proces transformácie stanovených požiadaviek do konkrétnych softvérových modelov, pričom sa zameriava na dosiahnutie vysokej miery oddelenia komponentov a čitateľnosti výsledného kódu.
 
 
 
-\subsubsection{Štruktúra balíčkov a repozitára}
+\subsection{Návrh architektúry knižnice}  \label{sec:navrh-arch}
+Architektúra knižnice bola navrhnutá s dôrazom na splnenie kľúčových nefunkčných požiadaviek definovaných v kapitole \ref{sec:nefunkcne-poziadavky}: jednoduchosť, rozšíriteľnosť a testovateľnosť. Tieto ciele sú dosiahnuté aplikáciou osvedčených architektonických princípov, predovšetkým princípu inverzie závislostí, ktorý bol teoreticky popísaný v kapitole \ref{sec:soft-architektury}. Základným kameňom celého návrhu je preto striktné oddelenie abstraktnej vrstvy (verejného API) od jej konkrétnej implementácie.
+
+
+
+\subsubsection{Štruktúra balíčkov a repozitára}  \label{sec:struktura}
 Na dosiahnutie požadovanej flexibility je knižnica rozdelená do niekoľkých samostatných Go balíčkov, z ktorých každý má jasne definovanú zodpovednosť:
 
 \begin{itemize}
-\item \textbf{Balíček \texttt{types}:} Tento balíček predstavuje verejnú časť a centrálny kontrakt celej knižnice. Definuje všetky verejné rozhrania, ktoré knižnica obsahuje (napr. \texttt{types.Runtime}, \texttt{types.ContainerOps}), ako aj všetky dátové typy, ktoré slúžia na konfiguráciu operácií či prenos výsledkov (napríklad \texttt{types.ContainerCreateConfig}). Dôležitým architektonickým rozhodnutím je, že tento balíček neobsahuje žiadnu konkrétnu logiku a nemá žiadne externé závislosti okrem štandardnej knižnice jazyka Go. Tým je zaručené, že kód, ktorý používa túto knižnicu, závisí iba od stabilných a čistých abstrakcií.
+\item \textbf{Balíček \texttt{types}:} Tento balíček predstavuje verejnú časť a centrálny kontrakt celej knižnice. Definuje všetky verejné rozhrania, ktoré knižnica obsahuje (napr. \texttt{types.Runtime}, \texttt{types.ContainerOps}), ako aj všetky dátové typy, ktoré slúžia na konfiguráciu operácií či prenos výsledkov (napríklad \texttt{types.ContainerCreateConfig}). Dôležitým architektonickým rozhodnutím je, že tento balíček neobsahuje žiadnu konkrétnu logiku a nemá žiadne externé závislosti mimo štandardnej knižnice jazyka Go. Tým je zaručené, že kód, ktorý používa túto knižnicu, závisí iba od stabilných a čistých abstrakcií.
 
-\item \textbf{Balíček \texttt{docker}:} Tento balíček poskytuje prvú a zatiaľ jedinú konkrétnu implementáciu rozhraní definovaných v balíčku \texttt{types}. Obsahuje internú štruktúru \texttt{runtime}, ktorá obaľuje klienta z oficiálneho Moby SDK a implementuje všetku logiku potrebnú na komunikáciu s Docker. Používateľ knižnice s týmto balíčkom interaguje iba pri inicializácii prostredníctvom konštruktora \texttt{docker.New()}, ktorý vracia abstraktné rozhranie \texttt{types.Runtime}, čím sú všetky implementačné detaily pred používateľom skryté.
+\item \textbf{Balíček \texttt{docker}:} Tento balíček poskytuje prvú a zatiaľ jedinú implementáciu rozhraní definovaných v balíčku \texttt{types}. Obsahuje internú štruktúru \texttt{runtime}, ktorá obaľuje klienta z oficiálneho Moby SDK a implementuje všetku logiku potrebnú na komunikáciu s Docker API. Používateľ knižnice s týmto balíčkom interaguje iba pri inicializácii prostredníctvom konštruktora \texttt{docker.New()}, ktorý vracia abstraktné rozhranie \texttt{types.Runtime}, čím sú všetky implementačné detaily pred používateľom skryté.
 
 \item \textbf{Použitie submodulov:} Knižnica zámerne nevyužíva takzvanú techniku \textit{reexportu}, kde by hlavný balíček exportoval typy z \texttt{types} a \texttt{docker}. Namiesto toho musí používateľ explicitne importovať oba balíčky:
 
@@ -375,12 +394,12 @@ Tento prístup bol zvolený z dôvodu explicitnosti a transparentnosti. Použív
 
 
 
-\subsubsection{Návrh verejného rozhrania}
-Verejné rozhranie knižnice je kompletne definované v balíčku \texttt{types} prostredníctvom Go rozhraní. Tento prístup umožňuje aplikáciám programovať voči stabilnému kontraktu a zároveň uľahčuje testovanie pomocou falošných (mock) implementácií.
+\subsubsection{Návrh verejného rozhrania}  \label{sec:navrh-rozhrania}
+Verejné rozhranie knižnice je kompletne definované v balíčku \texttt{types} prostredníctvom Go rozhraní. Tento prístup umožňuje aplikáciám programovať voči stabilnému kontraktu a zároveň uľahčuje testovanie pomocou falošných implementácií.
 
-Hlavným vstupným bodom je zložené rozhranie \texttt{types.Runtime}, ktoré v sebe spája niekoľko menších, špecializovaných rozhraní podľa princípu oddeľovania rozhraní (\textit{Interface Segregation Principle}): \texttt{SystemOps}, \texttt{ContainerOps}, \texttt{ImageOps}, \texttt{EventOps} a \texttt{TelemetryOps}.
+Hlavným vstupným bodom je zložené rozhranie \texttt{types.Runtime}, ktoré v sebe spája niekoľko špecializovaných rozhraní rozdelených podľa princípu oddeľovania rozhraní (\textit{Interface Segregation Principle}): \texttt{SystemOps}, \texttt{ContainerOps}, \texttt{ImageOps}, \texttt{EventOps} a \texttt{TelemetryOps}.
 
-Typický príklad použitia knižnice na vytvorenie a spustenie kontajneru je demonštrovaný na nasledujúcej ukážke.
+Typický príklad použitia knižnice na vytvorenie a spustenie kontajneru je demonštrovaný v Zdrojovom kóde \ref{lst:example}.
 
 \begin{lstlisting}[caption={Príklad použitia knižnice na vytvorenie a spustenie kontajneru.}, label={lst:example}]
 package main
@@ -404,7 +423,6 @@ func main() {
 
     cfg := types.ContainerCreateConfig{
         Image: "alpine:latest",
-        Cmd:   []string{"echo", "hello world"},
     }
 
     resp, err := rt.ContainerCreate(ctx, &cfg)
@@ -416,67 +434,66 @@ func main() {
     if err := rt.ContainerStart(ctx, resp.ID, nil); err != nil {
         log.Fatal(err)
     }
-    log.Println("Container started successfully.")
 }
 \end{lstlisting}
 
 
 
-\subsubsection{Implementačná vrstva a vzor Adaptér}
-Zatiaľ čo balíček \texttt{types} definuje abstraktné rozhranie knižnice, balíček \texttt{docker} poskytuje jej konkrétnu implementačnú vrstvu pre behové prostredie Docker. V rámci architektúry plní tento balíček rolu návrhových vzorov Adaptér a Fasáda. Jeho hlavnou úlohou je úplne skryť zložitosť oficiálneho Moby SDK, ktoré priamo komunikuje s Docker API. Kým v čistom Moby SDK musí vývojár pri operáciách zložito prepájať niekoľko rozsiahlych konfiguračných štruktúr, implementačná vrstva knižnice umožňuje použiť jedinú, zjednodušenú štruktúru (napríklad \texttt{types.ContainerCreateConfig}), z ktorej si potrebné nízkoúrovňové objekty vyskladá automaticky na pozadí.
+\subsubsection{Implementačná vrstva a vzor Adaptér}  \label{sec:implementacna-vrstva}
+Zatiaľ čo balíček \texttt{types} definuje abstraktné rozhranie knižnice, balíček \texttt{docker} poskytuje jeho konkrétnu implementačnú vrstvu pre behové prostredie Docker. V rámci architektúry plní tento balíček rolu návrhových vzorov Adaptér a Fasáda. Jeho hlavnou úlohou je úplne skryť zložitosť oficiálneho Moby SDK, ktoré priamo komunikuje s Docker API. Kým v Moby SDK musí vývojár pri operáciách zložito prepájať niekoľko rozsiahlych konfiguračných štruktúr, implementačná vrstva knižnice umožňuje použiť jedinú, zjednodušenú štruktúru (napríklad \texttt{types.ContainerCreateConfig}), z ktorej si potrebné nízkoúrovňové objekty vyskladá automaticky na pozadí.
 
-Kľúčovým mechanizmom tejto abstrakcie sú takzvané mapovacie funkcie, ktorých úlohou je obojsmerná transformácia dátových štruktúr. Pred odoslaním požiadavky do Docker tieto funkcie konvertujú abstraktné typy z balíčka \texttt{types} na špecifické typy vyžadované Moby SDK. Pri prijatí odpovede potom dekódujú často zložité dátové štruktúru a transformujú ich do jednoduchších, presne zameraných dátových typov učených používateľovi. Vďaka tejto prísnej izolácii nie je používateľská aplikácia vôbec viazaná na vnútorné modely Dockeru, čo zabezpečuje stabilitu verejného API aj v prípade zmien v samotnom SDK.
+Kľúčovým mechanizmom tejto abstrakcie sú takzvané mapovacie funkcie, ktorých úlohou je obojsmerná transformácia dátových štruktúr. Pred odoslaním požiadavky do Docker tieto funkcie konvertujú abstraktné typy z balíčka \texttt{types} na špecifické typy vyžadované Moby SDK. Pri prijatí odpovede potom dekódujú často zložité dátové štruktúry a transformujú ich do jednoduchších, presne zameraných dátových typov učených používateľovi. Vďaka tejto prísnej izolácii nie je používateľská aplikácia vôbec viazaná na vnútorné modely Dockeru, čo zabezpečuje stabilitu verejného API aj v prípade zmien v samotnom SDK.
 
 Neoddeliteľnou súčasťou implementačnej vrstvy je aj štandardizácia spracovania chýb. Keďže Docker API vracia širokú škálu často nekonzistentných chybových stavov, implementačná vrstva ich zachytáva a prekladá na vlastnú sadu sémantických chýb definovanú v balíčku \texttt{types} (napríklad \texttt{types.ErrNotFound} alebo \texttt{types.ErrConflict}). Tento prístup zbavuje vývojára nutnosti analyzovať chybové textové reťazce a umožňuje mu priamočiaro využívať štandardnú funkciu \texttt{errors.Is()} na spoľahlivú detekciu a programatické riešenie chybových stavov.
 
 
 
-\subsection{Implementácia Docker klienta}
+\subsection{Implementácia Docker klienta}  \label{sec:implementacia-docker}
 Táto podkapitola sa venuje detailnej implementácii funkcií Docker klienta v balíčku \texttt{docker}. Kým predchádzajúce časti práce sa sústredili na abstraktný návrh, táto sekcia analyzuje, ako sú rozhrania z balíčka \texttt{types} implementované pre prostredie Docker, aké interné mechanizmy knižnica využíva a ako efektívne pracuje so súbežnosťou a transformáciou dát. Celá implementácia je zabalená v internej štruktúre \texttt{runtime}, ktorá priamo komunikuje s oficiálnym Moby SDK.
 
 
 
-\subsubsection{Inicializácia klienta a bezpečnosť vlákien}
-Vstupný bod balíčku \texttt{docker} je konštruktor \texttt{docker.New(host string)}, ktorý inicializuje novú instanciu klienta a používateľovi vracia abstraktné rozhranie \texttt{types.Runtime}. Implementácia tohto konštruktora je navrhnutá s ohľadom na maximálnu flexibilitu pre používateľa. Ak vývojár poskytne explicitnú adresu Docker API (napríklad \texttt{unix:///var/run/docker.sock}), klient sa pripojí priamo na ňu. Ak je však parameter \texttt{host} prázdny, implementácia využije funkciu \texttt{client.FromEnv} z Moby SDK, ktorá automaticky načíta konfiguráciu zo štandardných premenných prostredia (ako je \texttt{DOCKER\_HOST}).
+\subsubsection{Inicializácia klienta a bezpečnosť vlákien}  \label{sec:inicializacia}
+Vstupný bod balíčku \texttt{docker} je konštruktor \texttt{docker.New(host string)}, ktorý inicializuje novú instanciu klienta a používateľovi vracia objekt spĺňajúci abstraktné rozhranie \texttt{types.Runtime}. Implementácia tohto konštruktoru je navrhnutá s ohľadom na maximálnu flexibilitu pre používateľa. Ak vývojár poskytne adresu Docker API (napríklad \texttt{unix:///var/run/docker.sock}), klient sa pripojí priamo na ňu. Ak je však parameter \texttt{host} prázdny, implementácia využije funkciu \texttt{client.FromEnv} z Moby SDK, ktorá automaticky načíta konfiguráciu zo štandardných premenných prostredia (ako je \texttt{DOCKER\_HOST}).
 
-Dôležitým implementačným detailom tejto štruktúry je vnútorná správa autentifikácie pre registry obrazov. Štruktúra \texttt{runtime} obsahuje internú mapu \texttt{authStore}, ktorá slúži ako pamäť pre prihlasovacie údaje a prístupové tokeny. Keď používateľ zavolá metódu \texttt{Login()}, implementácia prepošle prihlasovacie údaje Docker API a bezpečne si uloží vrátený \texttt{IdentityToken} pod doménou daného registru. 
+Dôležitým implementačným detailom tejto štruktúry je vnútorná správa autentifikácie pre registre obrazov. Štruktúra \texttt{runtime} obsahuje internú mapu \texttt{authStore}, ktorá slúži ako pamäť pre prihlasovacie údaje a prístupové tokeny. Keď používateľ zavolá metódu \texttt{Login()}, implementácia prepošle prihlasovacie údaje Docker API a bezpečne si uloží vrátený \texttt{IdentityToken} pod doménou daného registra. 
 
-Keďže jazyk Go prirodzene podporuje súbežné vykonávanie kódu, klientska inštancia môže byť súčasne využívaná viacerými gorutinami (napríklad jedna gorutina sťahuje obraz, kým iná sa prihlasuje do iného registru). Aby sa predišlo chybám súbežného prístupu k pamäti (\textit{race conditions}) pri zápise a čítaní z mapy \texttt{authStore}, implementácia dôsledne chráni túto mapu pomocou synchronizačného primitiva \texttt{sync.RWMutex} (\textit{Read-Write Mutex}). Tento prístup zaručuje, že klient je plne vláknovo bezpečný (\textit{thread-safe}).
+Keďže jazyk Go prirodzene podporuje súbežné vykonávanie kódu, klientska inštancia môže byť súčasne využívaná viacerými gorutinami (napríklad jedna gorutina sťahuje obraz, kým druhá sa prihlasuje do iného registru). Aby sa predišlo chybám súbežného prístupu k pamäti (\textit{race conditions}) pri zápise a čítaní z mapy \texttt{authStore}, implementácia dôsledne chráni túto mapu pomocou synchronizačného primitíva \texttt{sync.RWMutex} (\textit{Read-Write Mutex}) \cite{go-sync-rwmutex}. Tento prístup zaručuje, že klient je plne vláknovo bezpečný (\textit{thread-safe}).
 
 
 
-\subsubsection{Transformácia zdrojov a mapovacie funkcie}
-Správa životného cyklu kontajnerov (vytváranie, spúšťanie, zastavovanie) priamo závisí od internej vrstvy mapovačov. Ako bolo spomenuté v kapitole o návrhových vzoroch, Moby SDK vyžaduje pri vytváraní kontajneru v niektorých prípadoch mimoriadne komplexnú konfiguráciu. Implementácia v balíčku \texttt{docker} túto zložitosť nielen skrýva, ale aj aktívne prepočítava a transformuje dáta do formátu, ktorému Docker rozumie.
+\subsubsection{Transformácia objektov a mapovacie funkcie}  \label{sec:mapovanie}
+Správa životného cyklu kontajnerov (vytváranie, spúšťanie, zastavovanie) priamo závisí od internej vrstvy mapovacích funkcií. Ako bolo spomenuté v kapitole \ref{sec:soft-architektury}, Moby SDK vyžaduje pri vytváraní kontajneru v niektorých prípadoch mimoriadne komplexnú konfiguráciu. Implementácia v balíčku \texttt{docker} túto zložitosť nielen skrýva, ale aj aktívne prepočítava a transformuje dáta do formátu, ktorému Docker rozumie.
 
 Výborným príkladom tejto implementácie je správa a obmedzovanie hardvérových zdrojov. Docker API na najnižšej úrovni nepracuje s bežnými jednotkami (napríklad zlomky procesorových jadier alebo megabajty), ale využíva takzvané \textit{NanoCPUs} a bajty. Vďaka interne definovaným mapovacím funkciám \texttt{toNanoCPUs} a \texttt{megabytesToBytes} môže používateľ knižnice zadať požiadavku vo formáte, ktorý je pre človeka prirodzenejší. Implementácia tieto hodnoty automaticky prepočíta (v prípade procesoru vynásobením konštantou $10^9$) a správne informáciu začlení do štruktúry \texttt{container.HostConfig}, ktorú následne odošle Docker API. Tento prístup dramaticky znižuje chybovosť na strane používateľskej aplikácie.
 
 
 
-\subsubsection{Asynchrónne spracovanie telemetrie a udalostí}
-Najväčšou pridanou hodnotou implementácie klienta je spôsob, akým spracúva asynchrónne a nepretržité toky dát, akými sú systémové udalosti a telemetrické štatistiky bežiacich kontajnerov. Na tento účel implementácia plne využíva model súbežnosti jazyka Go, konkrétne gorutiny a typové kanály.
+\subsubsection{Asynchrónne spracovanie telemetrie a udalostí}  \label{sec:telemetria-events}
+Najväčšou pridanou hodnotou implementácie klienta je spôsob, akým spracúva asynchrónne a nepretržité toky dát, akými sú napríklad systémové udalosti a telemetrické štatistiky bežiacich kontajnerov. Na tento účel implementácia plne využíva model súbežnosti jazyka Go, konkrétne gorutiny a kanály.
 
-Pri funkcii \texttt{ContainerStats} klient nevráti jednu statickú hodnotu alebo dátovú štruktúru, ale vráti vlastnú dátovú štruktúru obsahujúcu dva kanály: jeden pre prichádzajúce štatistiky (\texttt{<-chan types.ContainerStats}) a druhý pre prípadné chyby (\texttt{<-chan error}). Po zavolaní tejto metódy klient na pozadí otvorí nepretržité HTTP spojenie s Docker API a spustí novú gorutinu. Táto gorutina v nekonečnej slučke číta prichádzajúce dáta vo formáte JSON, deserializuje ich a posiela do výstupného kanála, pričom hlavné vlákno aplikácie zostáva voľné. Používateľská aplikácia potom môže tento dátový prúd veľmi elegantne a efektívne spracovávať pomocou konštrukcie \texttt{select}.
+Pri funkcii \texttt{ContainerStats} klient nevráti jednu statickú hodnotu alebo dátovú štruktúru, ale vráti vlastnú dátovú štruktúru obsahujúcu dva kanály: jeden pre prichádzajúce štatistiky (\texttt{<-chan types.ContainerStats}) a druhý pre prípadné chyby (\texttt{<-chan error}). Po zavolaní tejto metódy klient na pozadí otvorí nepretržité HTTP spojenie s Docker API a spustí novú gorutinu. Táto gorutina v nekonečnej slučke číta prichádzajúce dáta vo formáte JSON, deserializuje ich a posiela do výstupného kanála, pričom hlavné vlákno aplikácie zostáva voľné. Používateľská aplikácia potom môže tento dátový prúd elegantne a efektívne spracovávať pomocou konštrukcie \texttt{select}.
 
-Rovnaký architektonický prístup je zvolený aj pri implementácii metódy \texttt{EventsStream}, ktorá asynchrónne počúva systémové udalosti (napríklad \texttt{die}, \texttt{start} alebo \texttt{kill}) rôznych typov a od rôznych aktérov (napríklad \texttt{container} a \texttt{image}). Implementácia navyše rešpektuje životný cyklus riadený prostredníctvom parametra \texttt{context.Context}. Ak používateľská aplikácia kontext zruší, implementácia to okamžite detekuje, bezpečne uzavrie otvorené spojenia s Docker API, ukončí gorutiny bežiace na pozadí a uzavrie všetky komunikačné kanály, čím sa predchádza únikom pamäte a gorutín.
+Rovnaký architektonický prístup je zvolený aj pri implementácii metódy \texttt{EventsStream}, ktorá asynchrónne počúva systémové udalosti (napríklad \texttt{die}, \texttt{start} alebo \texttt{kill}) rôznych typov a od rôznych aktérov (napríklad \texttt{container} a \texttt{image}). Implementácia navyše rešpektuje životný cyklus riadený prostredníctvom parametru \texttt{context.Context}. Ak používateľská aplikácia kontext zruší, implementácia to okamžite detekuje, bezpečne uzavrie otvorené spojenia s Docker API, ukončí gorutiny bežiace na pozadí a uzavrie všetky komunikačné kanály, čím sa predchádza únikom pamäte a gorutín.
 
 
 
-\subsection{Testovanie a validácia}
+\subsection{Testovanie a validácia}  \label{sec:testovanie}
 Softvérová knižnica, ktorá slúži ako abstraktná vrstva nad komplexným externým systémom akým je Docker, vyžaduje dôsledné testovanie. Zlyhanie na úrovni knižnice by mohlo mať negatívny kaskádový efekt na všetky klientske aplikácie. Pre zabezpečenie spoľahlivosti a stability knižnice je testovanie rozdelené na dve hlavné úrovne: štandardné jednotkové testy vnútornej logiky a testovanie verejného rozhrania pomocou falošných (\textit{mock}) objektov API.
 
 
 
-\subsubsection{Jednotkové testy}
+\subsubsection{Jednotkové testy}  \label{sec:unit-testy}
 Jednotkové (\textit{unit}) testy slúžia na overenie vnútornej logiky knižnice v úplnej izolácii od sieťovej komunikácie alebo externých závislostí. Ich primárnym cieľom je validovať správnosť transformácie dátových štruktúr a mapovacích funkcií, ktoré tvoria jadro implementačnej vrstvy. Pri knižnici tohto typu je veľmi dôležité pokryť kvalitnými jednotkovými testami všetky mapovacie funkcie, pretože je na nich postavená celá komunikácia s Docker API. V prípade chyby v mapovacej funkcii je dôsledkom nekonzistentný stav konfigurácie v klientskej aplikácii.
 
 Tieto testy pokrývajú všetky mapovacie funkcie, od funkcii na konverziu hardvérových limitov (ako sú \texttt{toNanoCPUs} alebo \texttt{megabytesToBytes}), konverziu časových formátov, až po kritickú logiku mapovania chýb. Preklad chýb z nízkoúrovňového Moby SDK do sémantických chýb knižnice je pre správne fungovanie aplikácií kľúčový. Jednotkové testy v tomto prípade simulujú rôzne vstupné chybové stavy a overujú, či funkcia \texttt{mapFromMobyError} vracia očakávané typy, ako napríklad \texttt{types.ErrConflict} alebo \texttt{types.ErrNotFound}.
 
 
 
-\subsubsection{Testovanie pomocou falošných objektov}
+\subsubsection{Testovanie pomocou falošných objektov}  \label{sec:mock-testy}
 Keďže balíček \texttt{docker} priamo závisí od komunikačného klienta poskytovaného Moby SDK, na dosiahnutie izolácie od Docker API bolo nevyhnutné nahradiť reálne sieťové pripojenie takzvaným falošným objektom (\textit{mock object}). Knižnica využíva fakt, že oficiálne SDK definuje pre svojho klienta rozsiahle rozhranie \texttt{client.APIClient}. V testovacom prostredí bola preto vytvorená vlastná štruktúra \texttt{mockDockerAPI}, ktorá toto rozhranie implementuje, čím spĺňa kontrakt očakávaný implementačnou vrstvou.
 
-Tento falošný objekt využíva flexibilný návrhový vzor založený na ukazovateľoch na funkcie (\textit{function pointers}). Namiesto statického a pevne daného naprogramovania falošných odpovedí obsahuje štruktúra polia funkcií pre každú podporovanú operáciu.
+Tento falošný objekt využíva flexibilný návrhový vzor založený na ukazovateľoch na funkcie (\textit{function pointers}). Namiesto statického a pevne daného naprogramovania falošných odpovedí obsahuje štruktúra polia funkcií pre každú podporovanú operáciu, ako ukazuje Zdrojový kód \ref{lst:mock-client}.
 
 \begin{lstlisting}[caption={Ukážka definície falošného klienta pre testovanie rozhrania.}, label={lst:mock-client}]
 type mockDockerAPI struct {
@@ -489,34 +506,34 @@ type mockDockerAPI struct {
 }
 \end{lstlisting}
 
-Tento prístup umožňuje v každom teste dynamicky a lokálne definovať, akú presnú odpoveď alebo špecifickú chybovú hlášku má falošný klient vrátiť. Vďaka tomu je možné v testoch veľmi presne simulovať aj zriedkavé sieťové výnimky, pri ktorých je náročné vytvoriť podmienky na jej vyvolanie – napríklad zlyhanie pripojenia použitím pomocnej funkcie \texttt{generateRealConnectionError()} – bez nutnosti nadväzovať sieťové spojenie s reálnym prostredím Docker. Takéto testy poskytujú vysokú mieru istoty, že knižnica správne reaguje na akýkoľvek vstup a chybový stav zo strany Docker API.
+Tento prístup umožňuje v každom teste dynamicky a lokálne definovať, akú presnú odpoveď alebo špecifickú chybovú hlášku má falošný klient vrátiť. Vďaka tomu je možné v testoch veľmi presne simulovať aj zriedkavé sieťové výnimky, pri ktorých je náročné vytvoriť podmienky na ich vyvolanie – napríklad zlyhanie pripojenia použitím pomocnej funkcie \texttt{generateRealConnectionError()} – bez nutnosti nadväzovať sieťové spojenie s reálnym prostredím Docker. Takéto testy poskytujú vysokú mieru istoty, že knižnica správne reaguje na akýkoľvek vstup a chybový stav zo strany Docker API.
 
 
 
-\subsection{Implementácia ukážkovej aplikácie}
-Aby bolo možné overiť a demonštrovať praktickú využiteľnosť, robustnosť a jednoduchosť použitia navrhnutej knižnice, je v rámci práce implementovaná ukážková aplikácia. Vzhľadom na zameranie knižnice bol zvolený nástroj na automatizáciu úloh, ktorý pripomína fungovanie moderných \textit{CI/CD (Continuous Integration / Continuous Deployment}) systémov, akými sú napríklad GitHub Actions alebo GitLab CI.
+\subsection{Implementácia ukážkovej aplikácie}  \label{sec:ukazkova-aplikacia}
+Aby bolo možné overiť a demonštrovať praktickú využiteľnosť, robustnosť a jednoduchosť použitia navrhnutej knižnice, je v rámci práce implementovaná ukážková aplikácia. Vzhľadom na zameranie knižnice bol zvolený nástroj na automatizáciu úloh, ktorý pripomína fungovanie moderných CI/CD systémov, akými sú napríklad GitHub Actions alebo GitLab CI.
 
 
 
-\subsubsection{Návrh a princíp fungovania}
-Úlohou aplikácie je prijať sekvenciu po sebe idúcich krokov (\textit{CI/CD pipeline}, pričom každý krok definuje konkrétny Docker obraz a príkaz, ktorý sa má vykonať. Aplikácia tieto úlohy sekvenčne spracúva. Pre každú z nich stiahne potrebný obraz, vytvorí izolovaný dočasný kontajner, prepojí jeho štandardný a chybový výstup priamo do terminálu používateľa a následne spustí blokujúce čakanie na jeho dokončenie. 
+\subsubsection{Návrh a princíp fungovania}  \label{sec:navrh-ukazky}
+Úlohou aplikácie je prijať sekvenciu po sebe idúcich krokov (\textit{pipeline}, pričom každý krok definuje konkrétny Docker obraz a príkaz, ktorý sa má vykonať. Aplikácia tieto úlohy sekvenčne spracúva. Pre každú z nich stiahne potrebný obraz, vytvorí izolovaný dočasný kontajner, prepojí jeho štandardný a chybový výstup priamo do terminálu používateľa a následne spustí blokujúce čakanie na jeho dokončenie. 
 
 Ak proces v kontajneri skončí s nenulovou návratovou hodnotou (napríklad v prípade chyby), reťazec úloh sa okamžite a bezpečne preruší. Tento prístup je úplným základom moderného softvérového inžinierstva a automatizácie, kde sa každý test alebo zostavenie aplikácie vykonáva v čistom, izolovanom prostredí.
 
 
 
-\subsubsection{Využitie vlastností knižnice v praxi}
+\subsubsection{Využitie vlastností knižnice v praxi}  \label{sec:vlastnosti-ukazky}
 Implementácia tejto ukážkovej aplikácie naplno demonštruje kľúčové výhody navrhnutej knižnice:
 
 \begin{itemize}
     \item \textbf{Vysoká úroveň abstrakcie:} Kód aplikácie je lineárny a ľahko čitateľný. Vývojár nemusí ručne konfigurovať zložité štruktúry pre Docker API; rozhranie knižnice poskytuje metódy ako \texttt{ImagePull}, \texttt{ContainerCreate} či \texttt{ContainerStart} s intuitívnymi parametrami.
     \item \textbf{Asynchrónne spracovanie postupu operácie:} Pri sťahovaní obrazov (\texttt{ImagePull}) aplikácia demonštruje silu jazyka Go. Hlavné vlákno spustí sťahovanie, zatiaľ čo dedikovaná gorutina na pozadí asynchrónne číta udalosti z poskytnutého kanála a vizualizuje ich používateľovi.
     \item \textbf{Bezpečné upratovanie zdrojov (\textit{Garbage Collection}):} Využitie štandardne používaného kľúčového slova \texttt{defer} jazyka Go v kombinácii s metódou \texttt{ContainerRemove} garantuje, že po každej úlohe sa dočasný kontajner okamžite zmaže. To platí aj v prípade nečakaného zlyhania, čím sa predchádza hromadeniu nepoužívaných kontajnerov na hostiteľskom systéme.
-        \item \textbf{Bezpečný zber telemetrie a správa životného cyklu prúdov:} Aplikácia demonštruje pokročilú prácu s nepretržitým tokom dát prostredníctvom metódy \texttt{ContainerStats}. Štatistiky o spotrebe pamäti sú spracovávané v samostatnej gorutine pomocou konštrukcie \texttt{select}. Kľúčovým prístupom v ukážke je využitie odvodeného kontextu (\texttt{context.WithCancel}). Akonáhle hlavná úloha skončí, tento kontext je explicitne zrušený, čo dáva Docker API inštrukciu, aby okamžite prerušilo odosielanie dát. Tento návrhový vzor zaručuje bezpečné ukončenie gorutiny na pozadí a efektívne zabraňuje únikom pamäte (\textit{memory leaks}) a zablokovaniu vlákien (\textit{goroutine leaks}).
+        \item \textbf{Bezpečný zber telemetrie a správa životného cyklu prúdov:} Aplikácia demonštruje pokročilú prácu s nepretržitým tokom dát prostredníctvom metódy \texttt{ContainerStats}. Štatistiky o spotrebe pamäti sú spracovávané v samostatnej gorutine pomocou konštrukcie \texttt{select}. Kľúčovým prístupom v ukážke je využitie odvodeného kontextu (\texttt{context.WithCancel}). Akonáhle hlavná úloha skončí, tento kontext je explicitne zrušený, čo dáva Docker API inštrukciu, aby okamžite prerušilo odosielanie dát. Tento detail zaručuje bezpečné ukončenie gorutiny na pozadí a efektívne zabraňuje únikom pamäte (\textit{memory leaks}) a zablokovaniu vlákien (\textit{goroutine leaks}).
     \item \textbf{Spracovanie návratových hodnôt:} Aplikácia správne využíva metódu \texttt{ContainerWait} na získanie návratovej hodnoty. Keďže Docker asynchrónne zachytí koniec procesu, aplikácia naň prostredníctvom knižnice počká, získa jeho návratovú hodnotu \textit{exit code} a na základe nej vyhodnotí úspešnosť úlohy.
 \end{itemize}
 
-Nasledujúca zjednodušená ukážka zdrojového kódu zobrazuje jadro tejto aplikácie, konkrétne funkciu \texttt{runTask}, ktorá má na starosti kompletnú orchestráciu jedného izolovaného kroku.
+Nasledujúca zjednodušená ukážka Zdrojového kódu \ref{lst:showcase-task} zobrazuje jadro tejto aplikácie, konkrétne funkciu \texttt{runTask}, ktorá má na starosti kompletnú orchestráciu jedného izolovaného kroku.
 
 \begin{lstlisting}[caption={Vykonanie izolovanej úlohy s využitím knižnice.}, label={lst:showcase-task}]
 func runTask(ctx context.Context, rt types.Runtime, task Task) error {
@@ -576,19 +593,19 @@ func runTask(ctx context.Context, rt types.Runtime, task Task) error {
 
 
 
-\section{Používateľská dokumentácia}
-Táto kapitola slúži ako praktická príručka pre vývojárov, ktorí chcú integrovať túto knižnicu (\texttt{containerlib}) do svojich vlastných softvérových projektov. Knižnica je navrhnutá s dôrazom na jednoduchosť použitia a typovú bezpečnosť, čím výrazne zjednodušuje prácu s kontajnerovými technológiami v jazyku Go.
+\section{Používateľská dokumentácia}  \label{sec:dokumentacia}
+Táto kapitola slúži ako praktická príručka pre vývojárov, ktorí chcú túto knižnicu (\texttt{containerlib}) integrovať do svojich vlastných softvérových projektov. Knižnica je navrhnutá s dôrazom na jednoduchosť použitia a typovú bezpečnosť, čím výrazne zjednodušuje prácu s kontajnerovými technológiami v jazyku Go.
 
 
 
-\subsection{Predpoklady a inštalácia}
+\subsection{Predpoklady a inštalácia}  \label{sec:docs-instalacia}
 Pre úspešné použitie knižnice je potrebné splniť nasledujúce systémové predpoklady:
 \begin{itemize}
     \item Nainštalované prostredie jazyka Go vo verzii 1.26 alebo novšej.
     \item Bežiaci Docker Engine na hostiteľskom systéme (lokálne alebo vzdialene).
 \end{itemize}
 
-Knižnicu je možné pridať do akéhokoľvek Go projektu pomocou štandardného nástroja pre správu závislostí:
+Knižnicu je možné pridať do akéhokoľvek Go projektu pomocou štandardného nástroja pre správu závislostí, demonštrované v Zdrojovom kóde \ref{lst:installation}:
 
 \begin{lstlisting}[language=bash, caption={Inštalácia knižnice.}, label={lst:installation}]
 go get github.com/samtaborsky/containerlib
@@ -596,10 +613,12 @@ go get github.com/samtaborsky/containerlib
 
 
 
-\subsection{Inicializácia a základné nastavenie}
+\subsection{Inicializácia a základné nastavenie}  \label{sec:docs-inicializacia}
 Pre prácu s knižnicou je potrebné importovať dva hlavné balíčky: \texttt{docker} pre inicializáciu konkrétneho klienta a \texttt{types} pre prácu s dátovými štruktúrami a rozhraniami.
 
-Vstupným bodom je konštruktor \texttt{docker.New()}. Tento konštruktor prijíma ako parameter adresu hostiteľa. Ak je parameter prázdny, klient sa automaticky nakonfiguruje podľa štandardných premenných prostredia. Po ukončení práce je nevyhnutné klienta bezpečne uzavrieť pomocou metódy \texttt{Close()}.
+Vstupným bodom je konštruktor \texttt{docker.New()}. Tento konštruktor prijíma ako parameter adresu hostiteľa. Ak je parameter prázdny, klient sa automaticky nakonfiguruje podľa štandardných premenných prostredia. Po ukončení práce je nevyhnutné klienta bezpečne uzavrieť pomocou metódy \texttt{Close()}. Inicializáciu ukazuje Zdrojový kód \ref{lst:initialization}.
+
+\clearpage
 
 \begin{lstlisting}[language=Go, caption={Inicializácia klienta.}, label={lst:initialization}]
 import (
@@ -623,8 +642,8 @@ func main() {
 
 
 
-\subsection{Práca s Docker obrazmi}
-Knižnica poskytuje metódy na sťahovanie, inšpekciu, výpis a odstránenie obrazov. Najčastejšie používanou operáciou je sťahovanie obrazu (\texttt{ImagePull}). Voliteľný parameter \texttt{types.ImagePullOptions} umožňuje nastaviť dodatočné parametre, ako napríklad odber asynchrónneho prúdu udalostí o postupe sťahovania prostredníctvom Go kanálu.
+\subsection{Práca s Docker obrazmi}  \label{sec:docs-obrazy}
+Knižnica poskytuje metódy na sťahovanie, inšpekciu, výpis a odstránenie obrazov. Najčastejšie používanou operáciou je sťahovanie obrazu (\texttt{ImagePull}). Voliteľný parameter \texttt{types.ImagePullOptions} umožňuje nastaviť dodatočné parametre, ako napríklad odber asynchrónneho prúdu udalostí o postupe sťahovania prostredníctvom Go kanálu. Použitie tejto funkcionality je demonštrované v Zdrojovom kóde \ref{lst:image-pull}
 
 \begin{lstlisting}[language=Go, caption={Ukážka stiahnutia obrazu.}, label={lst:image-pull}]
 err := rt.ImagePull(ctx, "alpine:latest", nil)
@@ -635,8 +654,10 @@ if err != nil {
 
 
 
-\subsection{Správa životného cyklu kontajnerov}
-Vytvorenie a spustenie kontajneru je vďaka knižnici veľmi jednoduché. Vývojár definuje požiadavky na vytvorenie kontajneru prostredníctvom konfiguračnej štruktúry \texttt{types.ContainerCreateConfig}. Nasledujúca ukážka zdrojového kódu demonštruje správu kompletného životného cyklu: vytvorenie, spustenie a blokujúce čakanie na dokončenie procesu.
+\subsection{Správa životného cyklu kontajnerov}  \label{sec:docs-lifecycle}
+Vytvorenie a spustenie kontajneru je vďaka knižnici veľmi jednoduché. Vývojár definuje požiadavky na vytvorenie kontajneru prostredníctvom konfiguračnej štruktúry \texttt{types.ContainerCreateConfig}. Nasledujúci Zdrojový kód \ref{lst:lifecycle-management} demonštruje správu kompletného životného cyklu: vytvorenie, spustenie a blokujúce čakanie na dokončenie procesu.
+
+\clearpage
 
 \begin{lstlisting}[language=Go, caption={Ukážka správy životného cyklu kontajneru.}, label={lst:lifecycle-management}]
 // 1. Create
@@ -668,10 +689,10 @@ log.Printf("Container exited with code: %d.", res.ExitCode)
 
 
 
-\subsection{Odber logov a telemetrie}
+\subsection{Odber logov a telemetrie}  \label{sec:docs-logy-telemetria}
 Knižnica využíva na streamovanie dát kanály a štandardné rozhrania jazyka Go. Pre získanie logov z kontajneru stačí v možnostiach definovať instancie typu \texttt{io.Writer} (napríklad priamo štandardný výstup \texttt{os.Stdout}). 
 
-Pre odber telemetrických dát (štatistík využitia procesoru a operačnej pamäti) knižnica vracia objekt obsahujúci dátový a chybový kanál, ktoré je možné jednoducho spracovávať pomocou konštrukcie \texttt{select}.
+Pre odber telemetrických dát (štatistík využitia procesoru a operačnej pamäti) knižnica vracia objekt obsahujúci dátový a chybový kanál, ktoré je možné jednoducho spracovávať pomocou konštrukcie \texttt{select}, ako v Zdrojovom kóde \ref{lst:telemetry-streaming}.
 
 \begin{lstlisting}[language=Go, caption={Ukážka čítania telemetrie v reálnom čase.}, label={lst:telemetry-streaming}]
 opts := types.ContainerStatsOptions{Stream: true}
@@ -701,8 +722,8 @@ for {
 
 
 
-\subsection{Spracovanie chýb}
-Implementačná vrstva knižnice prekladá nízkoúrovňové chyby z Docker API na vlastnú sadu štandardizovaných, sémantických chýb definovaných v balíčku \texttt{types}. To umožňuje vývojárom robustne a presne reagovať na špecifické chybové stavy pomocou štandardnej funkcie \texttt{errors.Is}.
+\subsection{Spracovanie chýb}  \label{sec:docs-chyby}
+Implementačná vrstva knižnice prekladá nízkoúrovňové chyby z Docker API na vlastnú sadu štandardizovaných sémantických chýb definovaných v balíčku \texttt{types}. To umožňuje vývojárom robustne a presne reagovať na špecifické chybové stavy pomocou štandardnej funkcie \texttt{errors.Is()}, napríklad ako v Zdrojovom kóde \ref{lst:error-handling}.
 
 \begin{lstlisting}[language=Go, caption={Ukážka spracovania chýb.}, label={lst:error-handling}]
 err := rt.ContainerStart(ctx, "non-existent-id", nil)
@@ -720,33 +741,33 @@ if err != nil {
 
 
 
-\section{Možné budúce rozšírenia}
+\section{Možné budúce rozšírenia}  \label{sec:buduce-rozsirenia}
 Hoci aktuálna implementácia knižnice úspešne spĺňa stanovené ciele a požiadavky tejto bakalárskej práce, jej architektúra bola od samého začiatku navrhovaná s ohľadom na dlhodobú udržateľnosť a možnosť postupného rozširovania. Striktné oddelenie abstraktných rozhraní od konkrétnej implementácie poskytuje ideálny základ pre pridávanie novej funkcionality bez narušenia existujúceho klientskeho kódu. V nasledujúcich podkapitolách sú zhrnuté hlavné smery, ktorými by som chcel vývoj projektu smerovať v budúcnosti.
 
 
 
-\subsection{Podpora ďalších behových prostredí}
+\subsection{Podpora ďalších behových prostredí}  \label{sec:dalsie-runtimes}
 Najprirodzenejším a najdôležitejším rozšírením knižnice bude implementácia podpory pre ďalšie kontajnerové behové prostredia. V súčasnosti knižnica obsahuje iba balíček \texttt{docker}. Vďaka rozhraniu \texttt{types.Runtime} je však systém pripravený na integráciu nasledujúcich alternatív:
 
 \begin{itemize}
-    \item \textbf{Podman:} Keďže Podman poskytuje REST API, ktoré je z veľkej časti kompatibilné s Docker API, pridanie balíčka \texttt{podman} by si vyžadovalo implementáciu špecifického klienta, ktorý by však mohol čiastočne zdieľať logiku mapovania s existujúcim riešením. Tým by knižnica získala podporu pre čoraz populárnejší prístup ku kontajnerom (\textit{daemonless} behové prostredie).
-    \item \textbf{containerd:} Ako nízkoúrovňové jadro, na ktorom stavia samotný Docker, poskytuje containerd vlastné gRPC API a Go klientsku knižnicu. Vytvorenie implementačnej vrstvy a balíčku \texttt{containerd} by umožnilo vývojárom spravovať kontajnery s absolútne minimálnou systémovou réžiou, čo je ideálne pre okrajové zariadenia (\textit{edge computing}) a vysoko optimalizované systémy.
+    \item \textbf{Podman:} Keďže Podman poskytuje REST API, ktoré je z veľkej časti kompatibilné s Docker API, pridanie balíčka \texttt{podman} by si vyžadovalo implementáciu špecifického klienta, ktorý by však mohol čiastočne zdieľať logiku mapovania s existujúcim riešením. Tým by knižnica získala podporu pre čoraz populárnejší prístup ku kontajnerom (\textit{daemonless} behové prostredia).
+    \item \textbf{containerd:} Ako nízkoúrovňové jadro, na ktorom je postavený aj samotný Docker, poskytuje containerd vlastné gRPC API a Go klientsku knižnicu. Vytvorenie implementačnej vrstvy a balíčku \texttt{containerd} by umožnilo vývojárom spravovať kontajnery s absolútne minimálnou systémovou réžiou, čo je ideálne pre okrajové zariadenia (\textit{edge computing}) a vysoko optimalizované systémy.
 \end{itemize}
 
 
 
-\subsection{Správa zväzkov a sieťovanie}
+\subsection{Správa zväzkov a sieťovanie}  \label{sec:zvazky-sietovanie}
 Aktuálna verzia verejného API v balíčku \texttt{types} sa zameriava primárne na životný cyklus kontajnerov, obrazov, telemetriu a udalosti. Pre plnohodnotné nasadenie v komplexných distribuovaných systémoch je však nevyhnutné abstrahovať aj ďalšie zdroje:
 
 \begin{itemize}
-    \item \textbf{Správa zväzkov (Volumes):} Vytvorenie rozhrania \texttt{VolumeOps}, ktoré by zastrešovalo správu perzistentného úložiska. To zahŕňa operácie ako vytvorenie zväzku, jeho odstránenie, výpis a inšpekciu, čo by umožnilo aplikáciám bezpečne spravovať stavové dáta nezávisle od životného cyklu samotného kontajnera.
+    \item \textbf{Správa zväzkov (Volumes):} Vytvorenie rozhrania \texttt{VolumeOps}, ktoré by zastrešovalo správu perzistentného úložiska. To zahŕňa operácie ako vytvorenie zväzku, jeho odstránenie, výpis a inšpekciu, čo by umožnilo aplikáciám bezpečne spravovať stavové dáta nezávisle od životného cyklu samotného kontajneru.
     \item \textbf{Správa sietí (Networking):} Vytvorenie rozhrania \texttt{NetworkOps} na programové vytváranie virtuálnych sietí (napríklad typu \textit{bridge} alebo \textit{overlay}), pripájanie kontajnerov do týchto sietí a správu izolácie komunikácie medzi viacerými bežiacimi službami.
 \end{itemize}
 
 
 
-\subsection{Open-source pokračovanie}
-Odovzdaním tejto bakalárskej práce sa vývoj knižnice nekončí. Mojím osobným plánom a ambíciou je sa tomuto projektu aktívne venovať aj po ukončení štúdia. Knižnica bude naďalej verejne dostupná ako open-source projekt pod \textit{MIT} licenciou.
+\subsection{Open-source pokračovanie}  \label{sec:open-source}
+Odovzdaním tejto bakalárskej práce sa vývoj knižnice nekončí. Mojím osobným plánom a ambíciou je sa tomuto projektu aktívne venovať aj po ukončení štúdia. Knižnica bude naďalej verejne dostupná ako open-source projekt pod \textit{MIT} licenciou \cite{mit-lic}.
 
 Cieľom tohto dlhodobého pokračovania je priviesť knižnicu do stavu blízkemu plnej produkčnej použiteľnosti a vysokej bezpečnosti. To zahŕňa:
 \begin{itemize}
@@ -762,19 +783,19 @@ Týmto pokračovaním má projekt ambíciu stať sa spoľahlivým, moderným a p
 %% \documentclass, výchozí český) se zadává použitím makra s uvedením
 %% jazyka jako nepovinného parametru.
 \begin{kiconclusions}
-Cieľom tejto práce bolo navrhnúť a implementovať rozšíriteľnú softvérovú knižnicu v jazyku Go pre správu Docker kontajnerov. Funkcionalita mala obsiahnuť kompletný životný cyklus kontajnerov, prácu s obrazmi, ako aj sledovanie udalostí a telemetrie. Návrh API mal byť predovšetkým intuitívny, typovo bezpečný a mal skryť nízkoúrovňovú komplexnosť oficiálneho SDK. Tvorba knižnice určenej pre iných vývojárov kládla obrovský dôraz na čistý návrh rozhraní a striktné oddelenie abstrakcie od samotnej implementácie.
+Cieľom tejto práce bolo navrhnúť a implementovať rozšíriteľnú softvérovú knižnicu v jazyku Go pre správu Docker kontajnerov. Funkcionalita mala obsiahnuť kompletný životný cyklus kontajnerov, prácu s obrazmi, ako aj sledovanie udalostí a telemetrie. Návrh API mal byť predovšetkým intuitívny, typovo bezpečný a mal skryť nízkoúrovňovú komplexnosť oficiálneho SDK. Tvorba knižnice určenej pre iných vývojárov kládla dôraz na čistý návrh rozhraní a striktné oddelenie abstrakcie od samotnej implementácie.
 
-Výsledná knižnica spĺňa definované požiadavky. Predstavuje nielen plnohodnotný a otestovaný softvérový komponent, ale aj stabilný základ pre ďalší open-source vývoj a rozšírenie o iné behové prostredia, ako napríklad Podman. Riešenie pokrýva všetky kľúčové aspekty modernej Go knižnice – od čistého návrhu dátových štruktúr, cez bezpečné asynchrónne spracovanie dátových prúdov pomocou gorutín a kanálov, až po spoľahlivé mapovanie chýb.
+Výsledná knižnica spĺňa definované požiadavky. Predstavuje nielen plnohodnotný a otestovaný softvérový komponent, ale aj stabilný základ pre ďalší open-source vývoj a rozšírenie o iné behové prostredia, ako napríklad Podman. Riešenie pokrýva všetky kľúčové aspekty modernej Go knižnice – od čistého návrhu dátových štruktúr, cez bezpečné asynchrónne spracovanie dátových prúdov pomocou gorutín a kanálov, až po spoľahlivé spracovanie chýb.
 
-Vývoj tohto projektu bol pre mňa nepochybne obrovským prínosom a výbornou prípravou pre prax v softvérovom inžinierstve. Implementácia takto komplexného nástroja mi jasne ukázala, aké dôležité je mať vopred premyslenú architektúru a vyriešené otázky návrhových vzorov pred samotným začiatkom vývoja. Zároveň mi to pomohlo lepšie odhadnúť náročnosť tvorby stabilného kódu, ktorý je nielen funkčný, ale aj dlhodobo udržateľný.
+Vývoj tohto projektu bol pre mňa nepochybne prínosom a výbornou prípravou pre prax v softvérovom inžinierstve. Implementácia takto komplexného nástroja mi jasne ukázala, aké dôležité je mať vopred premyslenú architektúru a vyriešené otázky návrhových vzorov pred samotným začiatkom vývoja. Zároveň mi to pomohlo lepšie odhadnúť náročnosť tvorby stabilného kódu, ktorý je nielen funkčný, ale aj dlhodobo udržateľný.
 \end{kiconclusions}
 
 \begin{kiconclusions}[english]
-The aim of this thesis was to design and implement an extensible software library in the Go programming language for Docker container management. The functionality was to encompass the complete container lifecycle, image management, as well as event and telemetry monitoring. The API design was primarily intended to be intuitive, type-safe, and hide the low-level complexity of the official SDK. Creating a library intended for other developers placed a massive emphasis on clean interface design and the strict separation of abstraction from the implementation itself.
+The aim of this thesis was to design and implement an extensible software library in the Go programming language for Docker container management. The functionality was to encompass the complete container lifecycle, image management, as well as event and telemetry monitoring. The API design was primarily intended to be intuitive, type-safe, and hide the low-level complexity of the official SDK. Creating a library intended for other developers placed an emphasis on clean interface design and the strict separation of abstraction from the implementation itself.
 
-The resulting library fulfills the defined requirements. It represents not only a fully-fledged and tested software component but also a stable foundation for further open-source development and expansion to other runtimes, such as Podman. The solution covers all key aspects of a modern Go library—from the clean design of data structures to safe asynchronous processing of data streams using goroutines and channels, and reliable error mapping.
+The resulting library fulfills the defined requirements. It represents not only a fully-fledged and tested software component, but also a stable foundation for further open-source development and expansion to other runtimes, such as Podman. The solution covers all key aspects of a modern Go library—from the clean design of data structures to safe asynchronous processing of data streams using goroutines and channels, and reliable error handling.
 
-Developing this project was undoubtedly of tremendous benefit to me and excellent preparation for software engineering practice. Implementing such a complex tool clearly showed me the importance of having a well-thought-out architecture and resolved design patterns before the actual development begins. At the same time, it helped me better estimate the effort required to create stable code that is not only functional but also maintainable in the long term.
+Developing this project was undoubtedly of benefit to me and an excellent preparation for software engineering practice. Implementing such a complex tool clearly showed me the importance of having a well-thought-out architecture and resolved design patterns before the actual development begins. At the same time, it helped me better estimate the effort required to create a stable codebase that is not only functional but also maintainable in the long term.
 \end{kiconclusions}
 
 %% Obsah elektronických dat. Poslední příloha. Upravte podle vlastní
@@ -815,7 +836,7 @@ Elektronické dáta tejto bakalárskej práce sú rozdelené do štruktúry adre
 %  Adresár obsahujúci zdrojové súbory obsahujúce spustiteľný program demonštrujúci
 %  použitie implementácie rozhrania balíčkom \texttt{docker}. Jedná sa o balíček \texttt{main}.
 
-Pri všetkých cudzích obsiahnutých materiálov ich zahrnutie dovoľujú podmienky na ich verejné šírenie alebo priložený súhlas držiteľa práv na použitie. Pre všetky použité (a~citované) materiály, pri~ktorých toto nie je splnené a~nie sú tak obsiahnuté, je uvedený ich zdroj, napr.~webová adresa, v~bibliografii alebo texte práce alebo v súbore \texttt{README.txt}.
+Pri všetkých cudzích obsiahnutých materiáloch ich zahrnutie dovoľujú podmienky na ich verejné šírenie alebo priložený súhlas držiteľa práv na použitie. Pre všetky použité (a~citované) materiály, pri~ktorých toto nie je splnené a~nie sú tak obsiahnuté, je uvedený ich zdroj, napr.~webová adresa, v~bibliografii alebo texte práce alebo v súbore \texttt{README.txt}.
 
 %% -------------------------------------------------------------------
 
@@ -852,6 +873,8 @@ Pri všetkých cudzích obsiahnutých materiálov ich zahrnutie dovoľujú podmi
 
 \bibitem{docker-registry} \uppercase{Docker}. What is a registry? [online]. [cit. 2026-04-29]. Dostupné z: \url{https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-registry/}
 
+\bibitem{hoare-csp} \uppercase{Hoare, C. A. R.} \textit{Communicating Sequential Processes} [online]. 2004 [cit. 2026-05-12]. Dostupné z: \url{https://www.cs.ox.ac.uk/ucs/hoarebook.pdf}
+
 \bibitem{go-concurrency} \uppercase{Cox-Buday, K.} \textit{Concurrency in Go: Tools and Techniques for Developers} [online]. O'Reilly Media, 2017 [cit. 2026-04-29]. ISBN 978-1491941195.
 
 \bibitem{clean-architecture} \uppercase{Martin, Robert}. \textit{Clean architecture: A Craftsman’s Guide to Software Structure and Design}. Pearson Professional, 2018 [cit. 2026-04-29]. ISBN 978-0134494166.
@@ -863,6 +886,10 @@ Pri všetkých cudzích obsiahnutých materiálov ich zahrnutie dovoľujú podmi
 \bibitem{dist-reference} \uppercase{Cloud Native Computing Foundation}. Distribution reference [online]. [cit. 2026-04-29]. Dostupné z: \url{https://github.com/distribution/reference}
 
 \bibitem{errdefs} \uppercase{Containerd Project}. Common definition and library of errors used by containerd [online]. [cit. 2026-04-29]. Dostupné z: \url{https://github.com/containerd/errdefs}
+
+\bibitem{go-sync-rwmutex} \uppercase{The Go Authors}. sync package - RWMutex - Go Packages [online]. [cit. 2026-05-04]. Dostupné z: \url{https://pkg.go.dev/sync#RWMutex}
+
+\bibitem{mit-lic} \uppercase{Open Source Initiative}. The MIT License [online]. [cit. 2026-05-04]. Dostupné z: \url{https://opensource.org/licenses/MIT}
 
 %\bibitem{jeske13} \uppercase{Jeske}, David; \uppercase{Novák}, Josef. Simple HTTP Server in \csharp: Threaded synchronous HTTP Server abstract class, to respond to HTTP requests. CodeProject: For those who code [online]. 2014-05-24. [cit. 2014-12-06]. Dostupné z: \url{http://www.codeproject.com/Articles/137979/Simple-HTTP-Server-in-C}
 
