@@ -35,7 +35,7 @@ func main() {
 		},
 		{
 			Name:  "Build",
-			Image: "golang:1.20-alpine",
+			Image: "golang:1.26-alpine",
 			Cmd:   []string{"go", "version"},
 		},
 		{
@@ -48,7 +48,7 @@ func main() {
 	fmt.Println("=== PIPELINE STARTT ===")
 
 	for i, task := range pipeline {
-		fmt.Printf("\n>>> Step %d/3: %s <<<\n", i+1, task.Name)
+		fmt.Printf("\n>>> Step %d/%d: %s <<<\n", i+1, len(pipeline), task.Name)
 
 		if err := runTask(ctx, rt, task); err != nil {
 			log.Fatalf("\n[PIPELINE FAILED] Step '%s' ended with an error: %v\n", task.Name, err)
