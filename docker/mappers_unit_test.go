@@ -17,18 +17,6 @@ import (
 // --- Errors
 // ---------------------------------------------------------------------------------------------------------------------
 
-type mockConnectionFailed struct{}
-
-func (e mockConnectionFailed) Error() string { return "simulated connection failure" }
-
-// As intercepts the errors.As() call made inside client.IsErrConnectionFailed.
-func (e mockConnectionFailed) As(target interface{}) bool {
-	if reflect.TypeOf(target).Elem().Name() == "errConnectionFailed" {
-		return true
-	}
-	return false
-}
-
 type mockErrdefs struct {
 	keyword string
 }
@@ -129,7 +117,7 @@ func TestMapFromMobyError(t *testing.T) {
 		},
 		{
 			name:        "Happy path - Connection failed (moby)",
-			input:       mockConnectionFailed{},
+			input:       generateRealConnectionError(),
 			expectedErr: types.ErrConnectionFailed,
 		},
 		{
